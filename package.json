@@ -22,7 +22,7 @@
   },
   "scripts": {
     "build": "rm -rf .rollup.cache && rm -rf tsconfig.tsbuildinfo && rollup -c",
-    "publish-alpha": "npm publish --tag alpha --provance==false"
+    "publish-alpha": "npm publish --tag alpha --provenance==false"
   },
   "bin": {
     "zoltra": "./cli/index.js"
