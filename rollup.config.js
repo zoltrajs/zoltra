@@ -47,5 +47,5 @@ export default {
     }),
     visualizer({ open: true, filename: "bundle-analysis.html" }),
   ],
-  external: [""],
+  external: ["commander"],
 };

@@ -21,11 +21,16 @@
     "./utils": "./dist/utils/index.d.ts"
   },
   "scripts": {
-    "build": "rm -rf .rollup.cache && rm -rf tsconfig.tsbuildinfo && rollup -c"
+    "build": "rm -rf .rollup.cache && rm -rf tsconfig.tsbuildinfo && rollup -c",
+    "publish-alpha": "npm publish --tag alpha --provenance==false"
+  },
+  "bin": {
+    "zoltra": "./cli/index.js"
   },
   "keywords": [],
   "files": [
-    "dist"
+    "dist",
+    "cli"
   ],
   "license": "MIT",
   "devDependencies": {
@@ -41,5 +46,8 @@
     "ts-node": "^10.9.2",
     "tslib": "^2.8.1",
     "typescript": "^5.8.2"
+  },
+  "dependencies": {
+    "commander": "^13.1.0"
   }
 }
