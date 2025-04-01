@@ -1,4 +1,4 @@
-import { config } from "config";
+import { config } from "zoltra/config";
 import { IncomingMessage } from "http";
 
 type LogLevel = "debug" | "info" | "warn" | "error";

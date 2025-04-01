@@ -1,7 +1,7 @@
 {
   "name": "zoltra",
   "version": "0.1.0",
-  "description": "",
+  "description": "A lightweight, plugin-first Node.js framework for web server",
   "main": "dist/index.cjs",
   "module": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -18,7 +18,7 @@
     "./utils": "./dist/utils/index.d.ts"
   },
   "scripts": {
-    "build": "rollup -c"
+    "build": "rm -rf .rollup.cache && rm -rf tsconfig.tsbuildinfo && rollup -c"
   },
   "keywords": [],
   "files": [

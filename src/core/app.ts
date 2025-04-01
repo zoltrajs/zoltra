@@ -1,13 +1,17 @@
 import { IncomingMessage, ServerResponse } from "http";
 import { RouteHandler } from "./route";
 import { errorHandler } from "middleware/error-handler";
-import { Logger } from "utils/logger";
 import { requestLogger } from "middleware/request-logger";
-import ApiError from "utils/error";
+import { RequestError, Logger } from "zoltra/utils";
 import http from "http";
-import { config } from "config";
+import { config } from "zoltra/config";
 import { bodyParser } from "middleware/body-parser";
-import { Middleware, ZoltraNext, ZoltraRequest, ZoltraResponse } from "types";
+import {
+  Middleware,
+  ZoltraNext,
+  ZoltraRequest,
+  ZoltraResponse,
+} from "zoltra/types";
 
 class App {
   private routeHandler: RouteHandler;
@@ -51,7 +55,7 @@ class App {
         // Route handling
         await this.routeHandler.handle(req, res);
       } catch (error) {
-        this.logger.error("Request failed:", error as ApiError, {
+        this.logger.error("Request failed:", error as RequestError, {
           method: req.method,
           url: req.url,
         });

@@ -2,7 +2,7 @@ import { IncomingMessage, ServerResponse } from "http";
 import { Logger } from "../utils/logger";
 import path from "path";
 import { existsSync, readdirSync } from "fs";
-import { Route } from "types";
+import { Route } from "zoltra/types";
 
 export class RouteHandler {
   private routes: Route[] = [];

@@ -10,7 +10,7 @@ export type ZoltraHandler = (
   next: ZoltraNext
 ) => Promise<void>;
 
-export interface Config {
+export interface ZoltraConfig {
   PORT: number;
   NODE_ENV: "development" | "production" | "test";
   DATABASE_URL?: string;
