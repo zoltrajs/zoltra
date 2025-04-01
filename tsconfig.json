@@ -20,6 +20,7 @@
     "allowSyntheticDefaultImports": true,
     "esModuleInterop": true,
     "forceConsistentCasingInFileNames": true,
+    "allowJs": true,
 
     /* Type Checking */
     "strict": true,
@@ -28,6 +29,6 @@
     /* Completeness */
     "skipLibCheck": true
   },
-  "include": ["src/**/*"],
+  "include": ["src/**/*", "cli"],
   "exclude": ["node_modules", "dist"]
 }
