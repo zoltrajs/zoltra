@@ -12,7 +12,10 @@
       "require": "./dist/index.cjs",
       "types": "./dist/index.d.ts"
     },
-    "./types": "./dist/types/index.d.ts"
+    "./types": "./dist/types/index.d.ts",
+    "./core": "./dist/core/index.d.ts",
+    "./config": "./dist/config/index.d.ts",
+    "./utils": "./dist/utils/index.d.ts"
   },
   "scripts": {
     "build": "rollup -c"
