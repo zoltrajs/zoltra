@@ -27,7 +27,16 @@
   "bin": {
     "zoltra": "./cli/index.js"
   },
-  "keywords": [],
+  "keywords": [
+    "zoltrajs",
+    "web-server",
+    "server",
+    "rest-api",
+    "middleware",
+    "plugin-system",
+    "backend",
+    "modern-js"
+  ],
   "files": [
     "dist",
     "cli"
