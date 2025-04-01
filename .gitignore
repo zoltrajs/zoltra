@@ -1,0 +1,8 @@
+*.tgz
+/dist
+/node_modules
+.env
+.releaserc.json
+*.cache
+tsconfig.tsbuildinfo
+*.html
