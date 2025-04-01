@@ -22,12 +22,21 @@
   },
   "scripts": {
     "build": "rm -rf .rollup.cache && rm -rf tsconfig.tsbuildinfo && rollup -c",
-    "publish-alpha": "npm publish --tag alpha --provenance==false"
+    "publish-alpha": "npm publish --tag alpha --access public --provenance=false"
   },
   "bin": {
     "zoltra": "./cli/index.js"
   },
-  "keywords": [],
+  "keywords": [
+    "zoltrajs",
+    "web-server",
+    "server",
+    "rest-api",
+    "middleware",
+    "plugin-system",
+    "backend",
+    "modern-js"
+  ],
   "files": [
     "dist",
     "cli"
