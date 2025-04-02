@@ -1,4 +1,3 @@
-import { IncomingMessage, ServerResponse } from "http";
 import { Logger } from "../utils/logger";
 
 declare module "http" {

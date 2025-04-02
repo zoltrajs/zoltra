@@ -3,6 +3,7 @@ import { Logger } from "../utils/logger";
 import path from "path";
 import { existsSync, readdirSync } from "fs";
 import { Route } from "zoltra/types";
+import { pathToFileURL } from "url";
 
 export class RouteHandler {
   private routes: Route[] = [];
@@ -37,10 +38,20 @@ export class RouteHandler {
         directory: routesDir,
       });
 
+      if (isTypeScript) {
+        return Promise.all(
+          files.map(async (file) => {
+            const modulePath = path.join(routesDir, file);
+            return this.loadRouteModule(modulePath);
+          })
+        );
+      }
+
       return Promise.all(
         files.map(async (file) => {
           const modulePath = path.join(routesDir, file);
-          return this.loadRouteModule(modulePath);
+          const routeURL = pathToFileURL(modulePath).href;
+          return this.loadRouteModule(routeURL);
         })
       );
     } catch (error) {
@@ -51,8 +62,9 @@ export class RouteHandler {
 
   private async loadRouteModule(modulePath: string): Promise<Route[]> {
     try {
-      // In production, use require for better error handling
-      if (process.env.NODE_ENV === "production") {
+      const { isTypeScript } = this.getRoutesDirectory();
+
+      if (isTypeScript) {
         const module = require(modulePath);
         this.logModuleError(module, modulePath);
         return module.routes || [];

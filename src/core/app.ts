@@ -12,6 +12,7 @@ import {
   ZoltraRequest,
   ZoltraResponse,
 } from "zoltra/types";
+import dotenv from "dotenv";
 
 class App {
   private routeHandler: RouteHandler;
@@ -22,6 +23,7 @@ class App {
   constructor() {
     this.routeHandler = new RouteHandler();
     this.logger = new Logger("App");
+    this.loadEnv();
   }
 
   public use(middleware: Middleware) {
@@ -94,6 +96,10 @@ class App {
     if (this.server) {
       this.server.close();
     }
+  }
+
+  private loadEnv() {
+    return dotenv.config();
   }
 }
 
