@@ -12,7 +12,7 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 const config = JSON.parse(
-  readFileSync(path.resolve("../package.json"), "utf-8")
+  readFileSync(path.resolve(__dirname, "../package.json"), "utf-8")
 );
 
 const program = new Command();
