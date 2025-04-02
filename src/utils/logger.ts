@@ -1,5 +1,7 @@
 import { config } from "zoltra/config";
+import readConfig from "config/read";
 import { IncomingMessage } from "http";
+import { ZoltraConfig } from "types";
 
 type LogLevel = "debug" | "info" | "warn" | "error";
 type LogData = Record<string, unknown> & {
@@ -14,10 +16,16 @@ type LogData = Record<string, unknown> & {
 export class Logger {
   private readonly context: string;
   private request?: IncomingMessage;
+  private config: ZoltraConfig = config;
 
   constructor(context?: string, req?: IncomingMessage) {
     this.context = context || "Application";
     this.request = req;
+    this.loadConfig();
+  }
+
+  private async loadConfig() {
+    this.config = await readConfig();
   }
 
   private log(
@@ -44,14 +52,14 @@ export class Logger {
     }
 
     // Format differently based on environment
-    if (config.NODE_ENV === "development") {
+    if (this.config.NODE_ENV === "development") {
       this.logToConsole(logEntry);
     } else {
       this.logToJson(logEntry);
     }
 
     // Add file logging in production
-    if (config.NODE_ENV === "production") {
+    if (this.config.NODE_ENV === "production") {
       this.logToFile(logEntry);
     }
   }
@@ -74,8 +82,8 @@ export class Logger {
 
   // TODO: Implement log to file
   private logToFile(logEntry: LogData) {
-    // Implement file logging using winston or similar if needed
     // This is a placeholder for actual file logging implementation
+    logEntry;
   }
 
   private getColorForLevel(level: LogLevel): string {
@@ -95,7 +103,7 @@ export class Logger {
 
   // Public API
   public debug(message: string, data?: Record<string, unknown>) {
-    if (config.LOG_LEVEL === "debug") {
+    if (this.config.LOG_LEVEL === "debug") {
       this.log("debug", message, data);
     }
   }
@@ -114,7 +122,8 @@ export class Logger {
       error: {
         name: error?.name,
         message: error?.message,
-        stack: config.NODE_ENV === "development" ? error?.stack : undefined,
+        stack:
+          this.config.NODE_ENV === "development" ? error?.stack : undefined,
       },
     });
   }

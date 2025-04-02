@@ -2,17 +2,17 @@ import { IncomingMessage, ServerResponse } from "http";
 import { RouteHandler } from "./route";
 import { errorHandler } from "middleware/error-handler";
 import { requestLogger } from "middleware/request-logger";
-import { RequestError, Logger } from "zoltra/utils";
+import { RequestError, Logger } from "../utils";
 import http from "http";
-import { config } from "zoltra/config";
 import { bodyParser } from "middleware/body-parser";
 import {
   Middleware,
   ZoltraNext,
   ZoltraRequest,
   ZoltraResponse,
-} from "zoltra/types";
+} from "../types";
 import dotenv from "dotenv";
+import readConfig from "../config/read";
 
 class App {
   private routeHandler: RouteHandler;
@@ -36,10 +36,6 @@ class App {
         middleware(req, res, resolve as ZoltraNext)
       );
     }
-  }
-
-  private async setup() {
-    await this.routeHandler.loadRoutes();
   }
 
   private handler() {
@@ -69,6 +65,7 @@ class App {
   private async applyMiddleware(req: IncomingMessage, res: ServerResponse) {
     await bodyParser()(req, res, async () => {});
     await requestLogger()(req, res, async () => {});
+    await this.run(req, res);
   }
 
   private enhanceResponse(res: http.ServerResponse) {
@@ -87,6 +84,7 @@ class App {
     await this.routeHandler.loadRoutes();
 
     this.server = http.createServer(this.handler());
+    const config = await readConfig();
     this.server.listen(config.PORT, () => {
       this.logger.info(`Server running on http://localhost:${config.PORT}`);
     });
