@@ -1,4 +1,4 @@
-import { ZoltraConfig } from "zoltra/types";
+import { ZoltraConfig } from "../types";
 
 export const config: ZoltraConfig = {
   PORT: parseInt(process.env.PORT || "5000"),
@@ -8,6 +8,4 @@ export const config: ZoltraConfig = {
   LOG_FILE: process.env.LOG_FILE,
 };
 
-export const defineConfig = (config: ZoltraConfig) => {
-  return config;
-};
+export const zoltraConfig = (config: ZoltraConfig) => config;

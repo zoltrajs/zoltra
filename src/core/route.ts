@@ -2,7 +2,7 @@ import { IncomingMessage, ServerResponse } from "http";
 import { Logger } from "../utils/logger";
 import path from "path";
 import { existsSync, readdirSync } from "fs";
-import { Route } from "zoltra/types";
+import { Route } from "../types";
 import { pathToFileURL } from "url";
 
 export class RouteHandler {
