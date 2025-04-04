@@ -1,6 +1,6 @@
 {
   "name": "zoltra",
-  "version": "0.1.0-alpha.1.4",
+  "version": "0.1.0-alpha.1.6",
   "description": "A lightweight, plugin-first Node.js framework for web server",
   "main": "dist/index.cjs",
   "module": "dist/index.js",
@@ -42,6 +42,14 @@
     "cli"
   ],
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/zoltrajs/zoltra.git"
+  },
+  "homepage": "https://github.com/zoltrajs/zoltra/tree/main/package#readme",
+  "bugs": {
+    "url": "https://github.com/zoltrajs/zoltra/issues"
+  },
   "devDependencies": {
     "@rollup/plugin-babel": "^6.0.4",
     "@rollup/plugin-commonjs": "^28.0.3",

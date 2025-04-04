@@ -1,5 +1,5 @@
 <div align='center'>
-  <img alt="Zoltra" src='https://github.com/zoltrajs/zoltra/tree/main/meta/zoltrajs-logo.png' width="80" height="80" style="max-width:100%;" />
+  <img alt="Zoltra" src='https://github.com/zoltrajs/zoltra/blob/main/meta/zoltrajs-logo.png' width="80" height="80" />
   <h1>Zoltra</h1>
   <h3>Code Less. Ship Faster.</h3>
   <p>A <strong>lightweight</strong>, plugin-first Node.js framework for web server</p>
@@ -10,7 +10,7 @@
 
 [Documentation]()
 
-[BenchMark]()
+<!-- [BenchMark]() -->
 
 </div>
 

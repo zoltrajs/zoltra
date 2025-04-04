@@ -1,7 +1,6 @@
-import { config } from "zoltra/config";
-import readConfig from "config/read";
 import { IncomingMessage } from "http";
 import { ZoltraConfig } from "types";
+import { config as Config } from "../config/read";
 
 type LogLevel = "debug" | "info" | "warn" | "error";
 type LogData = Record<string, unknown> & {
@@ -16,7 +15,7 @@ type LogData = Record<string, unknown> & {
 export class Logger {
   private readonly context: string;
   private request?: IncomingMessage;
-  private config: ZoltraConfig = config;
+  private config: ZoltraConfig = Config.read();
 
   constructor(context?: string, req?: IncomingMessage) {
     this.context = context || "Application";
@@ -24,8 +23,8 @@ export class Logger {
     this.loadConfig();
   }
 
-  private async loadConfig() {
-    this.config = await readConfig();
+  private loadConfig() {
+    this.config = Config.read();
   }
 
   private log(
@@ -83,7 +82,6 @@ export class Logger {
   // TODO: Implement log to file
   private logToFile(logEntry: LogData) {
     // This is a placeholder for actual file logging implementation
-    logEntry;
   }
 
   private getColorForLevel(level: LogLevel): string {

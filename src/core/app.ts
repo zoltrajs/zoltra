@@ -12,13 +12,15 @@ import {
   ZoltraResponse,
 } from "../types";
 import dotenv from "dotenv";
-import readConfig from "../config/read";
+import { ConfigManager } from "zoltra/config";
+import { config as Config } from "config/read";
 
 class App {
   private routeHandler: RouteHandler;
   private logger: Logger;
   private server?: http.Server;
   private middlewares: Middleware[] = [];
+  private config = new ConfigManager();
 
   constructor() {
     this.routeHandler = new RouteHandler();
@@ -41,6 +43,7 @@ class App {
   private handler() {
     return async (req: IncomingMessage, res: ServerResponse) => {
       try {
+        this.enhanceRequest(req);
         this.enhanceResponse(res);
         res.logger = this.logger;
 
@@ -80,11 +83,17 @@ class App {
     };
   }
 
+  private enhanceRequest(req: http.IncomingMessage) {
+    req.config = this.config;
+  }
+
   public async start() {
+    this.config.createDir();
     await this.routeHandler.loadRoutes();
 
     this.server = http.createServer(this.handler());
-    const config = await readConfig();
+    const config = await Config.import();
+    this.config.configToJSON(config);
     this.server.listen(config.PORT, () => {
       this.logger.info(`Server running on http://localhost:${config.PORT}`);
     });
