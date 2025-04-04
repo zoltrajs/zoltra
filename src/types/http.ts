@@ -1,3 +1,4 @@
+import { ConfigManager } from "zoltra/config";
 import { Logger } from "../utils/logger";
 
 declare module "http" {
@@ -5,7 +6,7 @@ declare module "http" {
     body?: any;
     params?: Record<string, string>;
     query?: Record<string, string>;
-    user?: any;
+    config: ConfigManager;
   }
 
   interface ServerResponse {

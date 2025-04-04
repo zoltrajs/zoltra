@@ -6,8 +6,7 @@ export type ZoltraNext = () => Promise<void>;
 
 export type ZoltraHandler = (
   req: ZoltraRequest,
-  res: ZoltraResponse,
-  next: ZoltraNext
+  res: ZoltraResponse
 ) => Promise<void>;
 
 export interface ZoltraConfig {

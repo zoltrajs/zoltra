@@ -70,7 +70,6 @@ export class RouteHandler {
         return module.routes || [];
       }
 
-      // In development, use dynamic import
       const module = await import(modulePath);
       this.logModuleError(module, modulePath);
       return module.routes || [];
