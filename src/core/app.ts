@@ -48,7 +48,7 @@ class App {
         res.logger = this.logger;
 
         // Apply logger
-        this.logger.debug(`Handling request: ${req.method} ${req.url}`);
+        // this.logger.debug(`Handling request: ${req.method} ${req.url}`);
 
         // Apply middleware chain
         await this.applyMiddleware(req, res);

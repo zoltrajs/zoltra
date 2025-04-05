@@ -1,6 +1,7 @@
 import { IncomingMessage } from "http";
 import { ZoltraConfig } from "types";
 import { config as Config } from "../config/read";
+import { colorText } from "./colors";
 
 type LogLevel = "debug" | "info" | "warn" | "error";
 type LogData = Record<string, unknown> & {
@@ -36,7 +37,7 @@ export class Logger {
       timestamp: new Date(),
       level,
       message,
-      context: this.context,
+      // context: this.context,
       ...data,
     };
 
@@ -129,26 +130,42 @@ export class Logger {
   // Request timing utility
   public trackRequest(req: IncomingMessage) {
     const startTime = process.hrtime();
-    const requestId = req.headers["x-request-id"] || this.generateRequestId();
+    // const requestId = req.headers["x-request-id"] || this.generateRequestId();
 
     return {
       end: (res: { statusCode: number }) => {
         const [seconds, nanoseconds] = process.hrtime(startTime);
         const durationMs = Math.round(seconds * 1000 + nanoseconds / 1000000);
 
-        this.info("Request completed", {
-          requestId,
-          statusCode: res.statusCode,
-          durationMs,
-        });
+        this.info(
+          `${req.method} ${req.url} ${this.colorStatus(
+            res.statusCode
+          )} in ${this.getDuration(durationMs)}`
+        );
       },
     };
   }
 
-  private generateRequestId(): string {
-    return (
-      Math.random().toString(36).substring(2, 15) +
-      Math.random().toString(36).substring(2, 15)
-    );
+  private getDuration(durationInMs: number): string {
+    if (durationInMs >= 1000) {
+      return `${(durationInMs / 1000).toFixed(1)}s`;
+    } else {
+      return `${durationInMs.toFixed(0)}ms`;
+    }
   }
+
+  private colorStatus(statusCode: number): string {
+    if (statusCode >= 500) return colorText(statusCode.toString(), "red");
+    if (statusCode >= 400) return colorText(statusCode.toString(), "yellow");
+    if (statusCode >= 300) return colorText(statusCode.toString(), "cyan");
+    if (statusCode >= 200) return colorText(statusCode.toString(), "green");
+    return colorText(statusCode.toString(), "white");
+  }
+
+  // private generateRequestId(): string {
+  //   return (
+  //     Math.random().toString(36).substring(2, 15) +
+  //     Math.random().toString(36).substring(2, 15)
+  //   );
+  // }
 }
