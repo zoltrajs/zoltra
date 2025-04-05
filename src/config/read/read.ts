@@ -7,7 +7,6 @@ export const readConfig = () => {
   const tsConfig = path.join(process.cwd(), "/tsconfig.json");
   const extention = existsSync(tsConfig) ? ".ts" : ".js";
   const dir = path.join(process.cwd(), `/zoltra.config${extention}`);
-  const impt = 'import { zoltraConfig } from "zoltra";';
 
   try {
     const content = readFileSync(dir, "utf-8");
@@ -18,8 +17,11 @@ export const readConfig = () => {
         /(['"`])(\\.|[^\x01\\])*?\1|\/\/.*|\/\*[\s\S]*?\*\//gm,
         (match, quote) => (quote ? match : "")
       )
-      .replace(impt, "")
-      .replace(/\s+/g, "");
+      // Remove all import statements (ES6 imports, both default and named imports)
+      .replace(/^\s*import\s+.*\s+from\s+['"`][^'"`]+['"`];/gm, "")
+      .replace(/^\s*import\s+['"`][^'"`]+['"`];/gm, "")
+      .replace(/\s+/g, "")
+      .replace(/asZoltraConfig/, "");
 
     const match = filteredContent.match(/\{.*\}/)?.[0];
     if (match) {
@@ -30,7 +32,7 @@ export const readConfig = () => {
       return config;
     }
   } catch (error) {
-    console.error("error reading config:", error);
+    console.error("error reading config:", (error as Error).message);
     return config;
   }
 };

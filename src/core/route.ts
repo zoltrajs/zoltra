@@ -139,7 +139,13 @@ export class RouteHandler {
 
       this.logger.debug("Request completed successfully");
     } catch (error) {
-      this.logger.error("Request handling failed", error as Error);
+      const err = error as Error;
+      this.logger.error("Request handling failed", {
+        name: "RequestHandlerError",
+        message: err.message,
+        stack: err.stack,
+      });
+
       res.statusCode = 500;
       res.end(JSON.stringify({ error: "Internal Server Error" }));
     }
@@ -214,6 +220,12 @@ export class RouteHandler {
       }
     }
   }
+
+  private extractPathQuery(
+    routePath: string,
+    requestPath: string,
+    req: IncomingMessage
+  ) {}
 
   private async runMiddleware(
     route: Route,

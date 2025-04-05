@@ -11,13 +11,6 @@ export function requestLogger() {
   ) => {
     const tracker = logger.trackRequest(req);
 
-    // Log request start
-    logger.info("Request started", {
-      method: req.method,
-      url: req.url,
-      headers: req.headers,
-    });
-
     // Override res.end to track completion
     const originalEnd = res.end;
     // @ts-ignore Come back to update // TODO: Come back to fix
