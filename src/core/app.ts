@@ -20,7 +20,7 @@ class App {
   private logger: Logger;
   private server?: http.Server;
   private middlewares: Middleware[] = [];
-  private config = new ConfigManager();
+  private configManger = new ConfigManager();
 
   constructor() {
     this.routeHandler = new RouteHandler();
@@ -84,16 +84,17 @@ class App {
   }
 
   private enhanceRequest(req: http.IncomingMessage) {
-    req.config = this.config;
+    //
+    req.configManger = this.configManger;
   }
 
   public async start() {
-    this.config.createDir();
+    this.configManger.createDir();
     await this.routeHandler.loadRoutes();
 
     this.server = http.createServer(this.handler());
     const config = await Config.import();
-    this.config.configToJSON(config);
+    this.configManger.configToJSON(config);
     this.server.listen(config.PORT, () => {
       this.logger.info(`Server running on http://localhost:${config.PORT}`);
     });

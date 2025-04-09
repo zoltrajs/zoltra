@@ -32,7 +32,6 @@ export const readConfig = () => {
       return config;
     }
   } catch (error) {
-    console.error("error reading config:", (error as Error).message);
     return config;
   }
 };

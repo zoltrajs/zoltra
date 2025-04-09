@@ -9,12 +9,16 @@ export const runDev = () => {};
 export const runDevTs = () => {
   try {
     clearTerminal();
-    execSync('tsc-watch --onsuccess "node dist/server.js"', {
+    execSync(`zoltra-watch --server dist/server.js`, {
       stdio: "inherit",
       cwd: process.cwd(),
     });
   } catch (error) {
-    logger.error("Error executing dev:ts command:", error.message);
+    logger.error("Error executing dev:ts command:", {
+      stack: error.stack,
+      message: error.message,
+      name: "DevCLI Execution",
+    });
     process.exit(1);
   }
 };

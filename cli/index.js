@@ -4,16 +4,9 @@ import { Command } from "commander";
 import { createApp } from "./commands/create.js";
 import { runDev, runDevTs } from "./commands/dev.js";
 import { Logger } from "zoltra";
-import { readFileSync } from "fs";
-import path from "path";
-import { fileURLToPath } from "url";
+import { getPackageOpts } from "./common.js";
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-
-const config = JSON.parse(
-  readFileSync(path.resolve(__dirname, "../package.json"), "utf-8")
-);
+const config = getPackageOpts();
 
 const program = new Command();
 
@@ -55,6 +48,8 @@ program.configureOutput({
     process.exit(1);
   },
 });
+
+// program.parse();
 
 // Parse arguments
 program.parseAsync(process.argv).catch(() => {
