@@ -1,6 +1,6 @@
 import { ZoltraConfig } from "zoltra/types";
-import { join } from "path";
-import { existsSync, mkdirSync, writeFileSync } from "fs";
+import path, { join } from "path";
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from "fs";
 
 export class ConfigManager {
   // private static config: ZoltraConfig;
@@ -26,5 +26,10 @@ export class ConfigManager {
     const jsonConfig = JSON.stringify(config);
     writeFileSync(join(this.dir, "config.json"), jsonConfig, "utf-8");
     this.jsonConfig = jsonConfig;
+  }
+
+  public readConfig() {
+    const config = readFileSync(path.join(this.dir, "config.json"));
+    return JSON.parse(config);
   }
 }

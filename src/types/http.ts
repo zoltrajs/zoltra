@@ -6,7 +6,7 @@ declare module "http" {
     body?: any;
     params?: Record<string, string>;
     query?: Record<string, string>;
-    config: ConfigManager;
+    configManger: ConfigManager;
   }
 
   interface ServerResponse {

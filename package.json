@@ -1,6 +1,6 @@
 {
   "name": "zoltra",
-  "version": "0.1.0-alpha.1.7",
+  "version": "0.1.0-alpha.1.8",
   "description": "A lightweight, plugin-first Node.js framework for web server",
   "main": "dist/index.cjs",
   "module": "dist/index.js",
@@ -25,7 +25,8 @@
     "publish-alpha": "npm publish --tag alpha --access public --provenance=false"
   },
   "bin": {
-    "zoltra": "./cli/index.js"
+    "zoltra": "./cli/index.js",
+    "zoltra-watch": "./cli/watcher/watch.js"
   },
   "keywords": [
     "zoltrajs",
@@ -66,6 +67,7 @@
     "typescript": "^5.8.2"
   },
   "dependencies": {
+    "chokidar": "^4.0.3",
     "commander": "^13.1.0",
     "dotenv": "^16.4.7"
   }
