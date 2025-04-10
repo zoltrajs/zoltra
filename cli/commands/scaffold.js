@@ -81,7 +81,7 @@ const logSuccess = (projectName) => {
   );
 
   const name = projectName !== "./" ? projectName : "";
-  console.log(`${colorText("Done. Now run", "bold", "white")}
+  console.log(`${colorText(" Done. Now run", "bold", "white")}
 
   ${colorText(name && `\cd ${projectName} && `, "bold", "green")}npm run dev
       `);

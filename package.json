@@ -1,6 +1,6 @@
 {
   "name": "zoltra",
-  "version": "0.1.0-alpha.1.9",
+  "version": "0.1.0-alpha.1.10",
   "description": "A lightweight, plugin-first Node.js framework for web server",
   "main": "dist/index.cjs",
   "module": "dist/index.js",
@@ -47,7 +47,7 @@
     "type": "git",
     "url": "git+https://github.com/zoltrajs/zoltra.git"
   },
-  "homepage": "https://github.com/zoltrajs/zoltra/tree/main/package#readme",
+  "homepage": "https://github.com/zoltrajs/zoltra#readme",
   "bugs": {
     "url": "https://github.com/zoltrajs/zoltra/issues"
   },

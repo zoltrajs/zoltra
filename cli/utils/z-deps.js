@@ -16,7 +16,7 @@ export const updateZdeps = (tag, logger) => {
         stdio: "ignore",
         cwd: projectDir,
       });
-      spinner.succeed(colorText(`${dep} updated to ${tag}.`, "green"));
+      spinner.succeed(colorText(`${dep} updated to ${tag}.\n`, "green"));
     } catch (error) {
       spinner.fail(
         colorText(`Failed to update ${dep}: ${error.message}`, "red")
