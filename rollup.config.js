@@ -49,5 +49,5 @@ export default {
     }),
     visualizer({ open: true, filename: "bundle-analysis.html" }),
   ],
-  external: ["commander", "dotenv", "chokidar"],
+  external: ["commander", "dotenv", "chokidar", "ora"],
 };
