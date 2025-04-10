@@ -1,0 +1,18 @@
+{
+  "common": {
+    "gitignore": "https://raw.githubusercontent.com/zoltrajs/zoltra-starter/main/.gitignore",
+    "readme": "https://raw.githubusercontent.com/zoltrajs/zoltra-starter/main/README.md",
+    "config": "https://raw.githubusercontent.com/zoltrajs/zoltra-starter/main/zoltra.config.ts",
+    "server": "https://raw.githubusercontent.com/zoltrajs/zoltra-starter/main/server.ts",
+    "helloRoute": "https://raw.githubusercontent.com/zoltrajs/zoltra-starter/main/routes/hello.ts"
+  },
+  "javascript": {
+    "package": "https://raw.githubusercontent.com/zoltrajs/zoltra-starter/main/javascript/package.json",
+    "helloController": "https://raw.githubusercontent.com/zoltrajs/zoltra-starter/main/javascript/controllers/hello.js"
+  },
+  "typescript": {
+    "helloController": "https://raw.githubusercontent.com/zoltrajs/zoltra-starter/main/typescript/controllers/hello.ts",
+    "tsconfig": "https://raw.githubusercontent.com/zoltrajs/zoltra-starter/main/typescript/tsconfig.json",
+    "package": "https://raw.githubusercontent.com/zoltrajs/zoltra-starter/main/typescript/package.json"
+  }
+}
