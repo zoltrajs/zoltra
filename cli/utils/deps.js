@@ -1,13 +1,16 @@
 import { execSync } from "child_process";
 import path from "path";
 import { colorText, Logger } from "zoltra";
+import { getPackageOpts } from "../common.js";
+
+const { publishConfig } = getPackageOpts();
+
+const logger = new Logger("InstallCommand");
 
 /**
  * Installs dependencies and runs the update-deps CLI command to update them
  * @param {string} appName - The name or path of the app
  */
-
-const logger = new Logger("InstallCommand");
 
 export const installPkg = async (appName) => {
   console.log(
@@ -19,13 +22,16 @@ export const installPkg = async (appName) => {
   );
 
   const dir = path.resolve(appName);
-  // const dir = appName;
+
+  const install = (cmd) => {
+    const Command = appName !== "/" ? `cd ${dir} && ${cmd}` : `${cmd}`;
+    execSync(Command, { stdio: "inherit" });
+  };
 
   try {
-    const installCommand =
-      appName !== "/" ? `cd ${dir} && npm install` : "npm install";
-
-    execSync(installCommand, { stdio: "inherit" });
+    if (publishConfig.tag === "alpha") {
+      install("npm install zoltra@alpha");
+    } else install("npm install");
     console.log(colorText("Dependencies installed successfully.", "green"));
     console.clear();
   } catch (error) {
