@@ -48,14 +48,6 @@ function startServer(script) {
 
 const debouncedRestart = debounce(startServer, 500);
 
-const restartServer = (script) => {
-  const startTime = Date.now();
-  debouncedRestart(script);
-  const endTime = Date.now();
-  const duration = getDuration(endTime - startTime);
-  logger.info(`✅ Server restarted in ${duration}`);
-};
-
 export const startJsWatcher = (serverPath) => {
   logInfo();
 
@@ -76,7 +68,7 @@ export const startJsWatcher = (serverPath) => {
   watcher.on("change", (filePath) => {
     if (filePath.endsWith(".js") || filePath.endsWith(".env")) {
       logger.info(`🟢 File changed: ${filePath}`);
-      restartServer(serverPath);
+      debouncedRestart(serverPath);
     }
   });
 };
