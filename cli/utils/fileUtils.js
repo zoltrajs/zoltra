@@ -17,7 +17,7 @@ export const getNameInput = (projectName) => {
   }
 };
 
-export const createRootDir = async (projectName, logOp) => {
+export const createRootDir = async (projectName) => {
   try {
     const currentDirName = getNameInput(projectName);
     const rootDir = path.join(cwd, currentDirName);

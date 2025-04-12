@@ -1,5 +1,4 @@
 import { colorText, Logger } from "zoltra";
-import { logJsImp } from "../utils/scaffoldUtils.js";
 import { execSync } from "child_process";
 import path from "path";
 
@@ -25,10 +24,6 @@ export const createApp = async (appName, options) => {
     );
   }
 
-  if (logJsImp(javascript, logger)) {
-    return;
-  }
-
   const dirSuccess = createRootDir(appName);
 
   const isTs = !javascript;
@@ -45,6 +40,8 @@ export const createApp = async (appName, options) => {
 
   if (isTs) {
     await handlePackage(appName, starterFiles.typescript.package);
+  } else if (javascript) {
+    await handlePackage(appName, starterFiles.javascript.package);
   }
 
   await installPkg(appName);

@@ -1,12 +1,12 @@
 import chokidar from "chokidar";
 import { Logger, colorText } from "zoltra";
-import { networkInterfaces as NetworkInterfaces } from "os";
 import {
   getAvailableEnvFiles,
   getPackageOpts,
   readConfig,
 } from "../../common.js";
 import { existsSync } from "fs";
+import { getLocalIp } from "../shared/index.js";
 
 const logger = new Logger("FileWatcher");
 
@@ -16,23 +16,6 @@ function debounce(func, wait) {
     clearTimeout(timeout);
     timeout = setTimeout(() => func(...args), wait);
   };
-}
-
-function getLocalIp() {
-  const networkInterfaces = NetworkInterfaces();
-  let localIp = "";
-
-  for (const interfaceName in networkInterfaces) {
-    const networkInterface = networkInterfaces[interfaceName];
-    for (const address of networkInterface) {
-      if (address.family === "IPv4" && !address.internal) {
-        localIp = address.address;
-        break;
-      }
-    }
-  }
-
-  return localIp;
 }
 
 export function watchFiles(rootDir, compileTypeScript) {
