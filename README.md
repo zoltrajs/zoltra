@@ -28,6 +28,8 @@
 
    - If no language is specified, the default is TypeScript.
 
+   Use `--no-git` to skip git initialization
+
    This command creates a new Zoltra project named `myapp` and sets it up according to the language option you choose.
 
 2. Start the application in development mode:
