@@ -6,6 +6,7 @@ import { Logger } from "zoltra";
 import { getPackageOpts } from "./common.js";
 import { createApp } from "./commands/scaffold.js";
 import { updateBatch } from "./commands/update-deps.js";
+import { start, startTs } from "./commands/start.js";
 
 const config = getPackageOpts();
 
@@ -41,6 +42,18 @@ program
   .description("Start development server (TypeScript)")
   .option("-p, --port <number>", "Port number", "5000")
   .action(runDevTs);
+
+program
+  .command("start")
+  .description("Start the server")
+  .option("-p, --port <number>", "Port number", "5000")
+  .action(start);
+
+program
+  .command("start:ts")
+  .description("Start the server (TypeScript)")
+  .option("-p, --port <number>", "Port number", "5000")
+  .action(startTs);
 
 program
   .command("update")

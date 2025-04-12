@@ -4,6 +4,7 @@ import { Command } from "commander";
 import { Logger } from "zoltra";
 import { startTsWatcher } from "./ts/watch.js";
 import { getPackageOpts } from "../common.js";
+import { startJsWatcher } from "./js/watch.js";
 
 const config = getPackageOpts();
 
@@ -21,8 +22,16 @@ program
   .name("watch")
   .description("Watch and compile TypeScript files")
   .requiredOption("-s, --server <path>", "Path to server entry file")
+  .option("-t, --typescript", "Start TypeScript watcher")
+  .option("-j, --javascript", "Start JavaScript watcher")
   .action((options) => {
-    startTsWatcher(options.server);
+    if (options.typescript) {
+      startTsWatcher(options.server);
+    } else if (options.javascript) {
+      startJsWatcher(options.server);
+    } else {
+      logger.error("Please specify either TypeScript or JavaScript watcher.");
+    }
   });
 
 program.parse();

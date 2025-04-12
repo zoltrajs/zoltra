@@ -2,37 +2,37 @@ import { clearTerminal } from "../common.js";
 import { execSync } from "child_process";
 import { Logger } from "zoltra";
 
-const logger = new Logger("DevCLI");
+const logger = new Logger("ServerCommand");
 
-export const runDev = () => {
+export const start = () => {
   try {
     clearTerminal();
-    execSync(`zoltra-watch -s server.js -j`, {
+    execSync(`node server.js`, {
       stdio: "inherit",
       cwd: process.cwd(),
     });
   } catch (error) {
-    logger.error("Error executing dev command:", {
+    logger.error("Error executing start command:", {
       stack: error.stack,
       message: error.message,
-      name: "DevCLI Execution",
+      name: "ServerCommand Execution",
     });
     process.exit(1);
   }
 };
 
-export const runDevTs = () => {
+export const startTs = () => {
   try {
     clearTerminal();
-    execSync(`zoltra-watch -s dist/server.js -t`, {
+    execSync(`node dist/server.js`, {
       stdio: "inherit",
       cwd: process.cwd(),
     });
   } catch (error) {
-    logger.error("Error executing dev:ts command:", {
+    logger.error("Error executing start:ts command:", {
       stack: error.stack,
       message: error.message,
-      name: "DevCLI Execution",
+      name: "ServerCommand Execution",
     });
     process.exit(1);
   }
