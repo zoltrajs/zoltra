@@ -71,7 +71,7 @@ export function watchFiles(rootDir, compileTypeScript) {
   });
 
   watcher.on("all", (event, path) => {
-    if (path.endsWith(".ts")) {
+    if (path.endsWith(".ts") || path.endsWith("tsconfig.json")) {
       debouncedCompile(path);
     }
   });

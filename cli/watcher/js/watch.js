@@ -1,4 +1,3 @@
-import * as path from "path";
 import { spawn } from "child_process";
 import chokidar from "chokidar";
 import { Logger, colorText } from "zoltra";
@@ -32,20 +31,19 @@ function debounce(func, delay) {
 
 // Start the server
 function startServer(script) {
+  const startTime = Date.now();
   if (serverProcess) {
     serverProcess.kill();
     logger.info("🔁 Restarting server...");
   }
 
-  const startTime = Date.now();
-  // logger.info("🚀 Starting server...");
   serverProcess = spawn("node", [script], {
     stdio: "inherit",
   });
 
   const endTime = Date.now();
   const duration = getDuration(endTime - startTime);
-  logger.info(`⏱️ Server started in ${duration}`);
+  logger.info(`✅ Server started in ${duration}`);
 }
 
 const debouncedRestart = debounce(startServer, 500);
@@ -55,18 +53,16 @@ const restartServer = (script) => {
   debouncedRestart(script);
   const endTime = Date.now();
   const duration = getDuration(endTime - startTime);
-  logger.info(`⏱️ Server restarted in ${duration}`);
+  logger.info(`✅ Server restarted in ${duration}`);
 };
 
 export const startJsWatcher = (serverPath) => {
-  const watchDir = path.resolve(process.cwd());
   logInfo();
-  //   logger.info("👀 Watching JavaScript files...");
 
   // Start server initially
   startServer(serverPath);
 
-  const watcher = chokidar.watch(watchDir, {
+  const watcher = chokidar.watch(".", {
     ignored: /node_modules/,
     persistent: true,
     ignoreInitial: true,

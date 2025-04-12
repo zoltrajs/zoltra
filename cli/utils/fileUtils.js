@@ -8,6 +8,10 @@ export const folders = ["controllers", "routes", "plugins"];
 const logger = new Logger("CLI/FileUtils");
 const cwd = process.cwd();
 
+export const replaceInCode = (code, search, replacement) => {
+  return code.replace(search, replacement);
+};
+
 export const getNameInput = (projectName) => {
   if (projectName === "./") {
     const currentDirName = path.basename(cwd);
@@ -162,10 +166,12 @@ export const createFiles = async (projectName, isTs, starterFiles) => {
       contents[ext].files.helloController
     );
 
+    const serverCode = replaceInCode(common.server, "as Error", "");
+
     await createFile(`${projectName}/.gitignore`, common.gitignore);
     await createFile(`${projectName}/README.md`, common.readme);
     await createFile(`${projectName}/zoltra.config${ext}`, common.config);
-    await createFile(`${projectName}/server${ext}`, common.server);
+    await createFile(`${projectName}/server${ext}`, serverCode);
 
     if (isTs) {
       await createFile(`${projectName}/tsconfig.json`, typescript.tsconfig);

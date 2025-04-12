@@ -24,7 +24,7 @@ export const createApp = async (appName, options) => {
     );
   }
 
-  const dirSuccess = createRootDir(appName);
+  const dirSuccess = await createRootDir(appName);
 
   const isTs = !javascript;
 
@@ -40,7 +40,7 @@ export const createApp = async (appName, options) => {
 
   if (isTs) {
     await handlePackage(appName, starterFiles.typescript.package);
-  } else if (javascript) {
+  } else {
     await handlePackage(appName, starterFiles.javascript.package);
   }
 
