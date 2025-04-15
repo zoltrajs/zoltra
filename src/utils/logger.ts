@@ -130,6 +130,7 @@ export class Logger {
   // Request timing utility
   public trackRequest(req: IncomingMessage) {
     const startTime = process.hrtime();
+
     // const requestId = req.headers["x-request-id"] || this.generateRequestId();
 
     return {

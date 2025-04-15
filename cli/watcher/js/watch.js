@@ -83,12 +83,12 @@ const logInfo = () => {
   const config = readConfig();
 
   console.log(`
-      ${colorText(`⚡ Zoltra.js ${pkg.version}`, "bold", "cyan")} (${tag})
-      -----------------------------------------
-      🌐 Local:        http://localhost:${config.PORT}
-      📡 IP Address:   ${getLocalIp()}
-      🧪 Environments: ${availableEnvs.join(", ") || "None"}
-      -----------------------------------------
+  ${colorText(`⚡ Zoltra.js ${pkg.version}`, "bold", "cyan")} (${tag})
+  -----------------------------------------
+  - 🌐 Local:        http://localhost:${config.PORT}
+  - 📡 IP Address:   ${getLocalIp()}
+  - 🧪 Environments: ${availableEnvs.join(", ") || "None"}
+  -----------------------------------------
       `);
 
   logger.info(`⚡ Starting...`);

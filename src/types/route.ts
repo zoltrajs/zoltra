@@ -1,13 +1,18 @@
-import { ZoltraRequest, ZoltraResponse } from "./core";
+import {
+  ZoltraHandler,
+  ZoltraNext,
+  ZoltraRequest,
+  ZoltraResponse,
+} from "./core";
 
 export interface Route {
   method: "GET" | "POST" | "PUT" | "DELETE" | "PATCH" | "OPTIONS" | "HEAD";
   path: string;
-  handler: (req: ZoltraRequest, res: ZoltraResponse) => Promise<void>;
+  handler: ZoltraHandler;
   middleware?: ((
     req: ZoltraRequest,
     res: ZoltraResponse,
-    next: () => Promise<void>
+    next: ZoltraNext
   ) => Promise<void>)[];
   validate?: (
     req: ZoltraRequest

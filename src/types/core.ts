@@ -2,11 +2,12 @@ import { IncomingMessage, ServerResponse } from "http";
 
 export type ZoltraRequest = IncomingMessage;
 export type ZoltraResponse = ServerResponse;
-export type ZoltraNext = () => Promise<void>;
+export type ZoltraNext = (error?: Error | unknown) => Promise<void>;
 
 export type ZoltraHandler = (
   req: ZoltraRequest,
-  res: ZoltraResponse
+  res: ZoltraResponse,
+  next: ZoltraNext
 ) => Promise<void>;
 
 export interface ZoltraConfig {
