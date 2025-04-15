@@ -11,9 +11,9 @@ export function requestLogger() {
   ) => {
     const tracker = logger.trackRequest(req);
 
-    // Override res.end to track completion
+    // Override `res.end` to track completion
     const originalEnd = res.end;
-    // @ts-ignore Come back to update // TODO: Come back to fix
+    // @ts-ignore
     res.end = function (chunk: any, encoding: any, callback?: any) {
       tracker.end({ statusCode: res.statusCode });
       return originalEnd.call(this, chunk, encoding, callback);

@@ -2,7 +2,7 @@ import { IncomingMessage, ServerResponse } from "http";
 import { Logger } from "../utils/logger";
 import path from "path";
 import { existsSync, readdirSync } from "fs";
-import { Route } from "../types";
+import { Route, ZoltraNext } from "../types";
 import { pathToFileURL } from "url";
 
 export class RouteHandler {
@@ -113,7 +113,11 @@ export class RouteHandler {
     return { isTypeScript, routesDir };
   }
 
-  public async handle(req: IncomingMessage, res: ServerResponse) {
+  public async handle(
+    req: IncomingMessage,
+    res: ServerResponse,
+    next: ZoltraNext
+  ) {
     try {
       this.logger.debug("Starting request handling");
 
@@ -135,7 +139,7 @@ export class RouteHandler {
       await this.runMiddleware(route, req, res);
 
       this.logger.debug("Executing route handler");
-      await route.handler(req, res);
+      await route.handler(req, res, next);
 
       this.logger.debug("Request completed successfully");
     } catch (error) {

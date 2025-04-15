@@ -1,26 +1,22 @@
 import { IncomingMessage, ServerResponse } from "http";
 import { RouteHandler } from "./route";
-import { errorHandler } from "middleware/error-handler";
 import { requestLogger } from "middleware/request-logger";
-import { RequestError, Logger } from "../utils";
+import { Logger } from "../utils";
 import http from "http";
 import { bodyParser } from "middleware/body-parser";
-import {
-  Middleware,
-  ZoltraNext,
-  ZoltraRequest,
-  ZoltraResponse,
-} from "../types";
 import dotenv from "dotenv";
 import { ConfigManager } from "zoltra/config";
 import { config as Config } from "config/read";
+import { ErrorHandler, Plugin, ZoltraHandler } from "../types";
 
 class App {
   private routeHandler: RouteHandler;
   private logger: Logger;
   private server?: http.Server;
-  private middlewares: Middleware[] = [];
   private configManger = new ConfigManager();
+  private plugins: Plugin[] = [];
+  private errorHandlers: ErrorHandler[] = [];
+  private middlewareChain: Array<ZoltraHandler> = [];
 
   constructor() {
     this.routeHandler = new RouteHandler();
@@ -28,47 +24,90 @@ class App {
     this.loadEnv();
   }
 
-  public use(middleware: Middleware) {
-    this.middlewares.push(middleware);
+  public register(plugin: Plugin) {
+    this.plugins.push(plugin);
   }
 
-  private async run(req: ZoltraRequest, res: ZoltraResponse) {
-    for (const middleware of this.middlewares) {
-      await new Promise((resolve) =>
-        middleware(req, res, resolve as ZoltraNext)
-      );
+  public addMiddleware(middleware: ZoltraHandler) {
+    this.middlewareChain.push(middleware);
+  }
+
+  public registerErrorHandler(handler: ErrorHandler) {
+    this.errorHandlers.push(handler);
+  }
+
+  private async initializePlugins() {
+    for (const plugin of this.plugins) {
+      await plugin.install(this);
     }
   }
 
   private handler() {
     return async (req: IncomingMessage, res: ServerResponse) => {
+      const next = async (error?: Error | unknown) => {
+        if (error) await this.handleError(error, req, res);
+      };
+
       try {
         this.enhanceRequest(req);
         this.enhanceResponse(res);
         res.logger = this.logger;
 
-        // Apply logger
-        // this.logger.debug(`Handling request: ${req.method} ${req.url}`);
-
-        // Apply middleware chain
         await this.applyMiddleware(req, res);
 
-        // Route handling
-        await this.routeHandler.handle(req, res);
+        const runMiddleware = async (index: number) => {
+          if (index >= this.middlewareChain.length) {
+            await this.routeHandler.handle(req, res, next);
+            return;
+          }
+
+          await this.middlewareChain[index](req, res, () =>
+            runMiddleware(index + 1)
+          );
+        };
+
+        await runMiddleware(0);
       } catch (error) {
-        this.logger.error("Request failed:", error as RequestError, {
-          method: req.method,
-          url: req.url,
-        });
-        errorHandler(error, req, res);
+        this.handleError(error, req, res);
       }
     };
+  }
+
+  // Error Handling
+  private defaultErrorHandler(
+    error: unknown,
+    req: IncomingMessage,
+    res: ServerResponse
+  ) {
+    const err = error as Error;
+    console.log(err);
+
+    res.status(500).json({
+      error: "Internal Server Error",
+      message: error instanceof Error ? error.message : String(error),
+    });
+  }
+
+  private async handleError(
+    error: unknown,
+    req: IncomingMessage,
+    res: ServerResponse
+  ) {
+    const runErrorHandler = async (index: number) => {
+      if (index >= this.errorHandlers.length) {
+        return this.defaultErrorHandler(error, req, res);
+      }
+
+      await this.errorHandlers[index](error, req, res, () =>
+        runErrorHandler(index + 1)
+      );
+    };
+    await runErrorHandler(0);
   }
 
   private async applyMiddleware(req: IncomingMessage, res: ServerResponse) {
     await bodyParser()(req, res, async () => {});
     await requestLogger()(req, res, async () => {});
-    await this.run(req, res);
   }
 
   private enhanceResponse(res: http.ServerResponse) {
@@ -84,12 +123,12 @@ class App {
   }
 
   private enhanceRequest(req: http.IncomingMessage) {
-    //
     req.configManger = this.configManger;
   }
 
   public async start() {
     this.configManger.createDir();
+    await this.initializePlugins();
     await this.routeHandler.loadRoutes();
 
     this.server = http.createServer(this.handler());

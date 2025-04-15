@@ -1,12 +1,12 @@
 {
   "name": "zoltra",
-  "version": "0.1.0-alpha.1.12",
+  "version": "0.1.0-beta.1",
   "description": "A lightweight, plugin-first Node.js framework for web server",
   "main": "dist/index.cjs",
   "module": "dist/index.js",
   "types": "dist/index.d.ts",
   "publishConfig": {
-    "tag": "alpha"
+    "tag": "beta"
   },
   "type": "module",
   "exports": {
@@ -17,6 +17,7 @@
     },
     "./types": "./dist/types/index.d.ts",
     "./core": "./dist/core/index.d.ts",
+    "./plugins": "./dist/plugins/index.d.ts",
     "./config": "./dist/config/index.d.ts",
     "./utils": "./dist/utils/index.d.ts"
   },
@@ -28,16 +29,6 @@
     "zoltra": "./cli/index.js",
     "zoltra-watch": "./cli/watcher/watch.js"
   },
-  "keywords": [
-    "zoltrajs",
-    "web-server",
-    "server",
-    "rest-api",
-    "middleware",
-    "plugin-system",
-    "backend",
-    "modern-js"
-  ],
   "files": [
     "dist",
     "cli"
@@ -51,6 +42,14 @@
   "bugs": {
     "url": "https://github.com/zoltrajs/zoltra/issues"
   },
+  "keywords": [
+    "zoltrajs",
+    "web-server",
+    "server",
+    "plugin-system",
+    "backend",
+    "modern-js"
+  ],
   "devDependencies": {
     "@rollup/plugin-babel": "^6.0.4",
     "@rollup/plugin-commonjs": "^28.0.3",
