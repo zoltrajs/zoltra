@@ -21,7 +21,7 @@
 1. Create a new project using Zoltra CLI:
 
    ```bash
-   npx zoltra@alpha create myapp --language
+   npx zoltra@beta create myapp --language
    ```
 
    Replace `--language` with either `--typescript` or `--javascript` depending on your preference.
