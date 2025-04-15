@@ -31,6 +31,8 @@ export const installPkg = async (appName) => {
   try {
     if (publishConfig.tag === "alpha") {
       install("npm install zoltra@alpha");
+    } else if (publishConfig.tag === "beta") {
+      install("npm install zoltra@beta");
     } else install("npm install");
     console.log(colorText("Dependencies installed successfully.", "green"));
     console.clear();
