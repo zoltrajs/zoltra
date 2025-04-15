@@ -12,7 +12,7 @@ export const updateZdeps = (tag, logger) => {
     spinner.start(colorText(`Updating ${dep} to ${tag}...`, "blue"));
 
     try {
-      execSync(`npm install zoltra@alpha`, {
+      execSync(`npm install zoltra@${tag}`, {
         stdio: "ignore",
         cwd: projectDir,
       });

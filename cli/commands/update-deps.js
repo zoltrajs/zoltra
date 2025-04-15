@@ -48,10 +48,11 @@ export const updateBatch = () => {
       }
     });
 
-    if (publishConfig.tag === "alpha") {
-      console.log(colorText("\nUpdating zoltra to alpha\n", "bold", "white"));
+    if (publishConfig.tag === "alpha" || publishConfig.tag === "beta") {
+      const tag = publishConfig.tag;
+      console.log(colorText(`\nUpdating zoltra to ${tag}\n`, "bold", "white"));
 
-      updateZdeps(publishConfig.tag, logger);
+      updateZdeps(tag, logger);
     }
   } catch (error) {
     logger.error("Failed to update dependencies:", error);
