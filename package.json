@@ -24,7 +24,8 @@
   "scripts": {
     "build": "rm -rf .rollup.cache && rm -rf tsconfig.tsbuildinfo && rollup -c",
     "publish-alpha": "npm publish --tag alpha --access public --provenance=false",
-    "publish-beta": "npm publish --tag beta --access public --provenance=false"
+    "publish-beta": "npm publish --tag beta --access public --provenance=false",
+    "publish-rc": "npm publish --tag rc --access public --provenance=false"
   },
   "bin": {
     "zoltra": "./cli/index.js",
