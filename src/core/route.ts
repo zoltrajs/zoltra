@@ -150,8 +150,7 @@ export class RouteHandler {
         stack: err.stack,
       });
 
-      res.statusCode = 500;
-      res.end(JSON.stringify({ error: "Internal Server Error" }));
+      res.status(500).json({ error: "Internal Server Error" });
     }
   }
 

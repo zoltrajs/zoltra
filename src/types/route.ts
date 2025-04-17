@@ -18,3 +18,8 @@ export interface Route {
     req: ZoltraRequest
   ) => Promise<{ isValid: boolean; errors?: Record<string, string> }>;
 }
+
+export interface RouteOptions {
+  basePath: string;
+  routes: Route[];
+}
