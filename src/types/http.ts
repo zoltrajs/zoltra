@@ -3,9 +3,9 @@ import { Logger } from "../utils/logger";
 
 declare module "http" {
   interface IncomingMessage {
-    body?: any;
-    params?: Record<string, string>;
-    query?: Record<string, string>;
+    body: Record<string, any>;
+    params: Record<string, string>;
+    query: Record<string, string | string[] | undefined>;
     configManger: ConfigManager;
   }
 

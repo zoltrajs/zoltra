@@ -3,7 +3,7 @@ import { Logger } from "../utils/logger";
 import path from "path";
 import { existsSync, readdirSync } from "fs";
 import { Route, ZoltraNext } from "../types";
-import { pathToFileURL } from "url";
+import { parse, pathToFileURL } from "url";
 
 export class RouteHandler {
   private routes: Route[] = [];
@@ -182,6 +182,7 @@ export class RouteHandler {
     if (route) {
       this.logger.debug(`Matched route: ${route.method} ${route.path}`);
       this.extractPathParams(route.path, path, req);
+      this.extractPathQuery(req);
     } else {
       this.logger.debug("No route matched");
     }
@@ -225,11 +226,12 @@ export class RouteHandler {
     }
   }
 
-  private extractPathQuery(
-    routePath: string,
-    requestPath: string,
-    req: IncomingMessage
-  ) {}
+  private extractPathQuery(req: IncomingMessage) {
+    const parsedUrl = parse(req.url!, true);
+    const queries = parsedUrl.query;
+
+    req.query = queries || {};
+  }
 
   private async runMiddleware(
     route: Route,
