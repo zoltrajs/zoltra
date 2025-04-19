@@ -4,10 +4,26 @@ import path from "path";
 import { existsSync, readdirSync } from "fs";
 import { Route, ZoltraNext } from "../types";
 import { parse, pathToFileURL } from "url";
+import RouteCache from "./cache/route-cache";
 
-export class RouteHandler {
+export class Router {
   private routes: Route[] = [];
-  private logger = new Logger("RouteHandler");
+  private logger = new Logger("Router");
+  private cacheEnabled: boolean = false;
+
+  private cache: RouteCache;
+
+  constructor() {
+    this.cache = new RouteCache();
+
+    this.cache.init(this.routes).catch((error) => {
+      this.logger.debug(`Failed to initialize route cache: ${error.message}`);
+    });
+  }
+
+  public setCacheEnabled(_enabled: boolean) {
+    this.cacheEnabled = _enabled;
+  }
 
   public async loadRoutes() {
     try {
@@ -138,6 +154,8 @@ export class RouteHandler {
       this.logger.debug("Running middleware chain");
       await this.runMiddleware(route, req, res);
 
+      if (res.headersSent) return;
+
       this.logger.debug("Executing route handler");
       await route.handler(req, res, next);
 
@@ -150,9 +168,38 @@ export class RouteHandler {
         stack: err.stack,
       });
 
-      res.statusCode = 500;
-      res.end(JSON.stringify({ error: "Internal Server Error" }));
+      res.status(500).json({ error: "Internal Server Error" });
     }
+  }
+
+  private _findMatchingRoute(
+    path: string,
+    method: string,
+    req: IncomingMessage
+  ): Route | undefined {
+    let toTalTime = 0;
+
+    const start = process.hrtime.bigint();
+    const route = this.routes.find((route) => {
+      const methodMatches = route.method === method;
+      const pathMatches = this.pathMatches(route.path, path);
+
+      return methodMatches && pathMatches;
+    });
+
+    if (route) {
+      this.extractPathParams(route.path, path, req);
+      this.extractPathQuery(req);
+    } else {
+      this.logger.debug("No route matched");
+    }
+
+    const end = process.hrtime.bigint();
+    toTalTime += Number(end - start) / 1e6;
+
+    this.logger.debug(`Total time: ${toTalTime.toFixed(3)} ms`);
+
+    return route;
   }
 
   private findMatchingRoute(
@@ -160,32 +207,56 @@ export class RouteHandler {
     method: string,
     req: IncomingMessage
   ): Route | undefined {
-    // Add debug logging
-    this.logger.debug("Available routes:", {
-      routes: this.routes.map((r) => `${r.method} ${r.path}`),
-    });
+    if (this.cacheEnabled) {
+      return this.findMatchingCachedRoute(path, method, req);
+    } else return this._findMatchingRoute(path, method, req);
+  }
 
-    this.logger.debug(`Looking for: ${method} ${path}`);
+  private findMatchingCachedRoute(
+    path: string,
+    method: string,
+    req: IncomingMessage
+  ): Route | undefined {
+    let toTalTime = 0;
 
-    const route = this.routes.find((route) => {
-      const methodMatches = route.method === method;
-      const pathMatches = this.pathMatches(route.path, path);
+    const start = process.hrtime.bigint();
+    // Try cache first, passing pathMatches for dynamic routes
+    let route = this.cache.getRoute(path, method, this.pathMatches.bind(this));
 
-      this.logger.debug(`Testing route: ${route.method} ${route.path}`, {
-        methodMatches,
-        pathMatches,
+    // If no exact match in cache, check routes with pathMatches
+    if (!route) {
+      route = this.routes.find((r) => {
+        const methodMatches = r.method === method;
+        const pathMatches = this.pathMatches(r.path, path);
+        return methodMatches && pathMatches;
       });
 
-      return methodMatches && pathMatches;
-    });
+      // Cache the result for future lookups
+      if (route) {
+        const currentRoutes = this.cache.getRoutes();
+        if (
+          !currentRoutes.some(
+            (r) => r.path === route!.path && r.method === route!.method
+          )
+        ) {
+          this.cache.updateRoutes([...currentRoutes, route]).catch((error) => {
+            this.logger.debug(`Failed to update cache: ${error.message}`);
+          });
+        }
+      }
+    }
 
     if (route) {
-      this.logger.debug(`Matched route: ${route.method} ${route.path}`);
       this.extractPathParams(route.path, path, req);
       this.extractPathQuery(req);
     } else {
       this.logger.debug("No route matched");
     }
+
+    const end = process.hrtime.bigint();
+    toTalTime += Number(end - start) / 1e6;
+
+    this.logger.debug(`Total time: ${toTalTime.toFixed(3)} ms`);
 
     return route;
   }

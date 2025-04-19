@@ -1,5 +1,5 @@
 import { IncomingMessage, ServerResponse } from "http";
-import { RouteHandler } from "./route";
+import { Router } from "./router";
 import { requestLogger } from "middleware/request-logger";
 import { Logger } from "../utils";
 import http from "http";
@@ -7,10 +7,10 @@ import { bodyParser } from "middleware/body-parser";
 import dotenv from "dotenv";
 import { ConfigManager } from "zoltra/config";
 import { config as Config } from "config/read";
-import { ErrorHandler, Plugin, ZoltraHandler } from "../types";
+import { ErrorHandler, Plugin, RequestRes, ZoltraHandler } from "../types";
 
 class App {
-  private routeHandler: RouteHandler;
+  private routeHandler: Router;
   private logger: Logger;
   private server?: http.Server;
   private configManger = new ConfigManager();
@@ -19,7 +19,7 @@ class App {
   private middlewareChain: Array<ZoltraHandler> = [];
 
   constructor() {
-    this.routeHandler = new RouteHandler();
+    this.routeHandler = new Router();
     this.logger = new Logger("App");
     this.loadEnv();
   }
@@ -28,7 +28,7 @@ class App {
     this.plugins.push(plugin);
   }
 
-  public addMiddleware(middleware: ZoltraHandler) {
+  public addMiddleware(middleware: ZoltraHandler): RequestRes {
     this.middlewareChain.push(middleware);
   }
 
@@ -133,7 +133,12 @@ class App {
 
     this.server = http.createServer(this.handler());
     const config = await Config.import();
+    // this.register(CorsPlugin(config.corsOptions));
+    this.routeHandler.setCacheEnabled(
+      config.experimetal?.router?.cache?.enabled ?? true
+    );
     this.configManger.configToJSON(config);
+    this.configManger.createCachePath();
     this.server.listen(config.PORT, () => {
       this.logger.info(`Server running on http://localhost:${config.PORT}`);
     });

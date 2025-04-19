@@ -1,9 +1,9 @@
 import { ZoltraConfig } from "zoltra/types";
 import path, { join } from "path";
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "fs";
+import { CACHE_DIR } from "../core/constants";
 
 export class ConfigManager {
-  // private static config: ZoltraConfig;
   private dir: string;
   public jsonConfig: string = "";
 
@@ -29,7 +29,14 @@ export class ConfigManager {
   }
 
   public readConfig() {
-    const config = readFileSync(path.join(this.dir, "config.json"));
+    const config = readFileSync(path.join(this.dir, "config.json"), "utf-8");
     return JSON.parse(config);
+  }
+
+  public createCachePath() {
+    const dir = join(this.dir, "cache");
+    if (!existsSync(dir)) {
+      mkdirSync(dir, { recursive: true });
+    }
   }
 }
