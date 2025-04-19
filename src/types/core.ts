@@ -1,14 +1,21 @@
 import { IncomingMessage, ServerResponse } from "http";
+import { CorsOptions } from "./plugin";
 
 export type ZoltraRequest = IncomingMessage;
 export type ZoltraResponse = ServerResponse;
 export type ZoltraNext = (error?: Error | unknown) => Promise<void>;
+export type RequestRes =
+  | void
+  | Promise<void>
+  | ServerResponse<IncomingMessage>
+  | Promise<ServerResponse>
+  | Promise<void | ServerResponse>;
 
 export type ZoltraHandler = (
   req: ZoltraRequest,
   res: ZoltraResponse,
   next: ZoltraNext
-) => Promise<void>;
+) => RequestRes;
 
 export interface ZoltraConfig {
   PORT: number;
@@ -16,10 +23,12 @@ export interface ZoltraConfig {
   DATABASE_URL?: string;
   LOG_LEVEL: "debug" | "info" | "warn" | "error";
   LOG_FILE?: string;
+  corsOptions?: CorsOptions;
+  experimetal?: {
+    router?: {
+      cache?: {
+        enabled?: boolean;
+      };
+    };
+  };
 }
-
-export type Middleware = (
-  req: ZoltraRequest,
-  res: ZoltraResponse,
-  next: ZoltraNext
-) => void;
