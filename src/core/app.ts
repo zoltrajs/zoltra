@@ -15,7 +15,7 @@ import {
   ZoltraConfig,
   ZoltraHandler,
 } from "../types";
-import { serverStatic } from "utils/static";
+import { serveStatic } from "utils/static";
 import { generateWelcomePage } from "utils/client-home";
 
 class Zoltra {
@@ -34,8 +34,8 @@ class Zoltra {
     this.loadEnv();
   }
 
-  static static(rootDir: string, options: StaticOptions = {}) {
-    return serverStatic(rootDir, options);
+  static static(rootDir: string, options: StaticOptions) {
+    return serveStatic(rootDir, options);
   }
 
   public register(plugin: Plugin) {
@@ -56,7 +56,9 @@ class Zoltra {
     }
   }
 
-  public link(path: string, handler: ZoltraHandler) {}
+  public useStatic(handler: ZoltraHandler) {
+    this.addMiddleware(handler);
+  }
 
   public home(handler: ZoltraHandler) {
     this._homeRouteInitialized = true;

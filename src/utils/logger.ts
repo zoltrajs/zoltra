@@ -116,14 +116,20 @@ export class Logger {
   }
 
   public error(message: string, error?: Error, data?: Record<string, unknown>) {
+    if (error) {
+      return this.log("error", message, {
+        ...data,
+        error: {
+          name: error?.name,
+          message: error?.message,
+          stack:
+            this.config.NODE_ENV === "development" ? error?.stack : undefined,
+        },
+      });
+    }
+
     this.log("error", message, {
       ...data,
-      error: {
-        name: error?.name,
-        message: error?.message,
-        stack:
-          this.config.NODE_ENV === "development" ? error?.stack : undefined,
-      },
     });
   }
 

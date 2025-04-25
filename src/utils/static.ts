@@ -1,12 +1,16 @@
-import { ZoltraRequest, ZoltraResponse, StaticOptions } from "../types";
+import {
+  ZoltraRequest,
+  ZoltraResponse,
+  ZoltraNext,
+  StaticOptions,
+} from "../types";
 import fs from "fs";
 import path from "path";
 import { createBrotliCompress, createGzip, createDeflate } from "zlib";
 import mime from "mime-types";
 import etag from "etag";
-import { PassThrough } from "stream";
+import { Logger } from "../utils";
 
-// Helper for range requests
 function parseRange(size: number, rangeHeader: string) {
   const bytes = rangeHeader.replace(/bytes=/, "").split("-");
   const start = parseInt(bytes[0], 10);
@@ -19,125 +23,14 @@ function parseRange(size: number, rangeHeader: string) {
   return { start, end };
 }
 
-export function serverStatic(rootDir: string, options: StaticOptions) {
-  return (req: ZoltraRequest, res: ZoltraResponse) => {
-    console.log("[ZOLTRA-INTERNAL] Root dir:", rootDir);
-    console.log("[ZOLTRA-INTERNAL] Requested path:", req.url);
-
-    // const filePath = path.join(rootDir);
-    const file = path.basename(req.url as string);
-    const filePath = path.join(rootDir, file);
-    console.log("[ZOLTRA-INTERNAL] Resolved path:", filePath);
-    console.log("[ZOLTRA-INTERNAL] File exists:", fs.existsSync(filePath));
-
-    try {
-      // 1. Security & Path Resolution
-      const sanitizedPath = path
-        .normalize(req.url!)
-        .replace(/^(\.\.[\/\\])+/, "");
-      let filePath = path.join(path.resolve(rootDir), sanitizedPath);
-
-      // Verify we're still within root directory
-      if (!filePath.startsWith(path.resolve(rootDir))) {
-        res.statusCode = 403;
-        return res.end("Forbidden");
-      }
-
-      // 2. Extension Fallback
-      if (options.extensions && !path.extname(filePath)) {
-        for (const ext of options.extensions) {
-          const testPath = `${filePath}.${ext}`;
-          if (fs.existsSync(testPath)) {
-            filePath = testPath;
-            break;
-          }
-        }
-      }
-
-      // 3. File Stats & Caching Headers
-      fs.stat(filePath, (err, stats) => {
-        if (err || !stats.isFile()) {
-          res.statusCode = 404;
-          return res.end("Not Found");
-        }
-
-        const resHeaders: Record<string, string> = {
-          "Content-Type": mime.lookup(filePath) || "application/octet-stream",
-          "Content-Length": stats.size.toString(),
-        };
-
-        // 4. Freshness Check
-        if (options.etag) resHeaders["ETag"] = etag(stats);
-        if (options.lastModified)
-          resHeaders["Last-Modified"] = stats.mtime.toUTCString();
-
-        if (isFresh(req, resHeaders)) {
-          res.writeHead(304);
-          return res.end();
-        }
-
-        // 5. Range Requests
-        if (options.acceptRanges && req.headers.range) {
-          const range = parseRange(stats.size, req.headers.range);
-          if (range) {
-            res.writeHead(206, {
-              ...resHeaders,
-              "Content-Range": `bytes ${range.start}-${range.end}/${stats.size}`,
-              "Content-Length": (range.end - range.start + 1).toString(),
-            });
-            const stream = fs.createReadStream(filePath, range);
-            stream.on("error", handleStreamError);
-            return stream.pipe(res);
-          }
-        }
-
-        // 6. Compression
-        const acceptEncoding = req.headers["accept-encoding"] || "";
-        const stream = fs.createReadStream(filePath);
-
-        if (acceptEncoding.includes("br")) {
-          res.setHeader("Content-Encoding", "br");
-          const compressor = createBrotliCompress();
-          stream.pipe(compressor).pipe(res);
-        } else if (acceptEncoding.includes("gzip")) {
-          res.setHeader("Content-Encoding", "gzip");
-          const compressor = createGzip();
-          stream.pipe(compressor).pipe(res);
-        } else if (acceptEncoding.includes("deflate")) {
-          res.setHeader("Content-Encoding", "deflate");
-          const compressor = createDeflate();
-          stream.pipe(compressor).pipe(res);
-        } else {
-          // 7. Uncompressed response
-          res.writeHead(200, resHeaders);
-          stream.pipe(res);
-        }
-
-        // Error handlers
-        stream.on("error", handleStreamError);
-        if ("pipe" in res) {
-          stream.on("error", () => res.destroy());
-        }
-      });
-    } catch (err) {
-      res.statusCode = 500;
-      res.end("Internal Server Error");
-    }
-  };
-}
-
 function isFresh(req: ZoltraRequest, headers: Record<string, string>) {
-  // 1. Check cache-control: no-cache
-  const cacheControl = req.headers["cache-control"];
-  if (cacheControl?.includes("no-cache")) return false;
+  if (req.headers["cache-control"]?.includes("no-cache")) return false;
 
-  // 2. Check ETag match
   const ifNoneMatch = req.headers["if-none-match"];
   if (ifNoneMatch && headers["ETag"]) {
     return ifNoneMatch.split(/\s*,\s*/).includes(headers["ETag"]);
   }
 
-  // 3. Check Last-Modified
   const ifModifiedSince = req.headers["if-modified-since"];
   if (ifModifiedSince && headers["Last-Modified"]) {
     return new Date(ifModifiedSince) >= new Date(headers["Last-Modified"]);
@@ -146,9 +39,173 @@ function isFresh(req: ZoltraRequest, headers: Record<string, string>) {
   return false;
 }
 
-const handleStreamError = function (this: ZoltraResponse, err: Error) {
-  if (!this.headersSent) {
-    this.statusCode = 500;
-    this.end("Internal Server Error");
-  }
-};
+function createSafeStream(
+  filePath: string,
+  range?: { start: number; end: number },
+  res?: ZoltraResponse
+) {
+  const stream = fs.createReadStream(filePath, range);
+  stream.on("error", (err) => {
+    console.error("Stream error:", err);
+    if (res && !res.headersSent) {
+      res.status(500).end("Internal Server Error");
+    }
+  });
+  return stream;
+}
+
+export function serveStatic(rootDir: string, options: StaticOptions) {
+  const logger = new Logger("StaticHandler");
+  const {
+    prefix = "",
+    extensions = [],
+    etag: useEtag = true,
+    lastModified = true,
+    acceptRanges = true,
+    cacheControl = true,
+    maxAge = 0,
+    immutable = false,
+    fallthrough = true,
+    mimeTypes = {},
+    debug = false,
+  } = options;
+
+  return async (req: ZoltraRequest, res: ZoltraResponse, next?: ZoltraNext) => {
+    try {
+      // 1. Sanitize and resolve URL path
+      let urlPath = req.url || "/";
+      urlPath = urlPath.split("?")[0].split("#")[0];
+
+      const normalizedPrefix = prefix
+        ? `/${prefix.replace(/^\/|\/$/g, "")}`
+        : "";
+
+      if (normalizedPrefix && !urlPath.startsWith(normalizedPrefix)) {
+        return fallthrough ? next?.() : res.status(404).end();
+      }
+
+      const relativePath = normalizedPrefix
+        ? urlPath.slice(normalizedPrefix.length) || "/"
+        : urlPath;
+
+      let sanitizedPath;
+      try {
+        sanitizedPath = path
+          .normalize(decodeURIComponent(relativePath))
+          .replace(/^(\.\.[\/\\])+/, "");
+      } catch {
+        return res.status(400).end("Bad Request");
+      }
+
+      // 2. Resolve and validate file path
+      const filePath = path.join(path.resolve(rootDir), sanitizedPath);
+
+      if (!filePath.startsWith(path.resolve(rootDir))) {
+        return res.status(403).end("Forbidden");
+      }
+
+      // 3. Check file existence
+      let stats;
+      try {
+        stats = await fs.promises.stat(filePath);
+      } catch {
+        return fallthrough ? next?.() : res.status(404).end("Not Found");
+      }
+
+      let finalPath = filePath;
+
+      // 4. Extension fallback
+      if (!stats.isFile() && extensions.length && !path.extname(filePath)) {
+        const files = await fs.promises.readdir(path.dirname(filePath));
+        for (const ext of extensions) {
+          const testFile = `${path.basename(filePath)}.${ext}`;
+          if (files.includes(testFile)) {
+            finalPath = path.join(path.dirname(filePath), testFile);
+            stats = await fs.promises.stat(finalPath);
+            break;
+          }
+        }
+      }
+
+      // 5. Ensure it's a file
+      if (!stats.isFile()) {
+        return fallthrough ? next?.() : res.status(404).end("Not Found");
+      }
+
+      // 6. Prepare response headers
+      const resHeaders: Record<string, string> = {
+        "Content-Type":
+          mime.lookup(finalPath) ||
+          mimeTypes[path.extname(finalPath)] ||
+          "application/octet-stream",
+        "Content-Length": stats.size.toString(),
+      };
+
+      if (useEtag) resHeaders["ETag"] = etag(stats);
+      if (lastModified) resHeaders["Last-Modified"] = stats.mtime.toUTCString();
+      if (acceptRanges) resHeaders["Accept-Ranges"] = "bytes";
+
+      if (cacheControl) {
+        const directives = [
+          "public",
+          maxAge && `max-age=${maxAge}`,
+          immutable && "immutable",
+        ].filter(Boolean);
+        resHeaders["Cache-Control"] = directives.join(", ");
+      }
+
+      // 7. Handle HEAD requests
+      if (req.method === "HEAD") {
+        res.writeHead(200, resHeaders);
+        return res.end();
+      }
+
+      // 8. Freshness check
+      if (isFresh(req, resHeaders)) {
+        return res.status(304).end();
+      }
+
+      // 9. Range requests
+      if (acceptRanges && req.headers.range) {
+        const range = parseRange(stats.size, req.headers.range);
+        if (range) {
+          res.writeHead(206, {
+            ...resHeaders,
+            "Content-Range": `bytes ${range.start}-${range.end}/${stats.size}`,
+            "Content-Length": (range.end - range.start + 1).toString(),
+          });
+          return createSafeStream(finalPath, range, res).pipe(res);
+        } else {
+          res.writeHead(416, { "Content-Range": `bytes */${stats.size}` });
+          return res.end();
+        }
+      }
+
+      // 10. Compression (skip for range requests)
+      const acceptEncoding = req.headers["accept-encoding"] || "";
+      const stream = createSafeStream(finalPath, undefined, res);
+
+      if (debug) {
+        logger.debug(`Serving file: ${finalPath}`);
+      }
+
+      if (acceptEncoding.includes("br")) {
+        res.setHeader("Content-Encoding", "br");
+        stream.pipe(createBrotliCompress()).pipe(res);
+      } else if (acceptEncoding.includes("gzip")) {
+        res.setHeader("Content-Encoding", "gzip");
+        stream.pipe(createGzip()).pipe(res);
+      } else if (acceptEncoding.includes("deflate")) {
+        res.setHeader("Content-Encoding", "deflate");
+        stream.pipe(createDeflate()).pipe(res);
+      } else {
+        res.writeHead(200, resHeaders);
+        stream.pipe(res);
+      }
+    } catch (err) {
+      const error = err as Error;
+      logger.error(`Static serving error: ${error.message}`);
+      res.status(500).end("Internal Server Error");
+    }
+  };
+}
