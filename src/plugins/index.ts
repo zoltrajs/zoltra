@@ -1,2 +1,2 @@
-export { default as CorsPlugin } from "./cors";
+export { default as corsPlugin } from "./cors";
 export * from "./utils";

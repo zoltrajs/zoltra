@@ -1,7 +1,6 @@
 import { ZoltraConfig } from "zoltra/types";
 import path, { join } from "path";
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "fs";
-import { CACHE_DIR } from "../core/constants";
 
 export class ConfigManager {
   private dir: string;

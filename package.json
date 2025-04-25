@@ -1,7 +1,7 @@
 {
   "name": "zoltra",
-  "version": "0.1.0-beta.3",
-  "description": "A lightweight, plugin-first Node.js framework for web server",
+  "version": "0.1.0-beta.4",
+  "description": "A lightweight, plugin-first Node.js framework for building fast and scalable web servers",
   "main": "dist/index.cjs",
   "module": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -58,6 +58,8 @@
     "@rollup/plugin-json": "^6.1.0",
     "@rollup/plugin-node-resolve": "^16.0.1",
     "@rollup/plugin-typescript": "^12.1.2",
+    "@types/etag": "^1.8.3",
+    "@types/mime-types": "^2.1.4",
     "rollup": "^4.36.0",
     "rollup-plugin-delete": "^3.0.1",
     "rollup-plugin-esbuild": "^6.2.1",
@@ -71,6 +73,8 @@
     "chokidar": "^4.0.3",
     "commander": "^13.1.0",
     "dotenv": "^16.4.7",
+    "etag": "^1.8.1",
+    "mime-types": "^3.0.1",
     "ora": "^8.2.0"
   }
 }
