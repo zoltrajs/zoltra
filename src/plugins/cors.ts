@@ -1,15 +1,15 @@
 import { createPlugin } from ".";
 import { CorsOptions } from "../types";
 
-export default function CorsPlugin(options: CorsOptions = {}) {
+export default function corsPlugin(options: CorsOptions = {}) {
   const {
     origins = ["*"],
     methods = ["GET", "HEAD", "POST", "PUT", "DELETE", "PATCH"],
     headers = ["Content-Type", "Authorization"],
-    exposedHeaders = [], // Support for custom exposed headers
+    exposedHeaders = [],
     credentials = false,
     maxAge = 86400,
-    preflightStatus = 204, // Customizable preflight status
+    preflightStatus = 204,
     optionsSuccessStatus = 200,
   } = options;
 

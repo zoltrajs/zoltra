@@ -2,7 +2,13 @@ import { IncomingMessage, ServerResponse } from "http";
 import { Logger } from "../utils/logger";
 import path from "path";
 import { existsSync, readdirSync } from "fs";
-import { Route, ZoltraNext } from "../types";
+import {
+  Route,
+  ZoltraHandler,
+  ZoltraNext,
+  ZoltraRequest,
+  ZoltraResponse,
+} from "../types";
 import { parse, pathToFileURL } from "url";
 import RouteCache from "./cache/route-cache";
 
@@ -10,7 +16,7 @@ export class Router {
   private routes: Route[] = [];
   private logger = new Logger("Router");
   private cacheEnabled: boolean = false;
-
+  private _homeRoute: Route | null = null;
   private cache: RouteCache;
 
   constructor() {
@@ -25,6 +31,22 @@ export class Router {
     this.cacheEnabled = _enabled;
   }
 
+  public registerHomeRoute(handler: ZoltraHandler) {
+    const existingIndex = this.routes.findIndex(
+      (route) => route.path === "/" && route.method === "GET"
+    );
+
+    if (existingIndex >= 0) {
+      this.routes[existingIndex].handler = handler;
+    } else {
+      this._homeRoute = {
+        path: "/",
+        method: "GET",
+        handler,
+      };
+    }
+  }
+
   public async loadRoutes() {
     try {
       // Load route modules dynamically (file-based routing)
@@ -32,6 +54,10 @@ export class Router {
 
       // Flatten all routes into single array
       this.routes = routeModules.flat();
+
+      if (this._homeRoute) {
+        this.routes.push(this._homeRoute);
+      }
 
       this.logger.info(`Loaded ${this.routes.length} routes`);
     } catch (error) {
@@ -130,8 +156,8 @@ export class Router {
   }
 
   public async handle(
-    req: IncomingMessage,
-    res: ServerResponse,
+    req: ZoltraRequest,
+    res: ZoltraResponse,
     next: ZoltraNext
   ) {
     try {
@@ -168,7 +194,9 @@ export class Router {
         stack: err.stack,
       });
 
-      res.status(500).json({ error: "Internal Server Error" });
+      res
+        .status(500)
+        .json({ error: "Internal Server Error", message: err.message });
     }
   }
 

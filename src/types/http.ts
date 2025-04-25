@@ -11,6 +11,7 @@ declare module "http" {
 
   interface ServerResponse {
     json: (data: any) => void;
+    send: (data: any) => void;
     status: (code: number) => ServerResponse;
     logger: Logger;
   }

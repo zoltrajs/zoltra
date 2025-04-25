@@ -1,4 +1,4 @@
-import { App } from "zoltra/core";
+import { Zoltra } from "zoltra/core";
 import { ErrorPluginOptions, Plugin } from "../types";
 
 export function createPlugin(plugin: Plugin) {
@@ -8,7 +8,7 @@ export function createPlugin(plugin: Plugin) {
 export function createErrorPlugin(options: ErrorPluginOptions) {
   return {
     ...options,
-    install: (app: App) => {
+    install: (app: Zoltra) => {
       app.registerErrorHandler(options.handler);
       options.install?.(app);
     },

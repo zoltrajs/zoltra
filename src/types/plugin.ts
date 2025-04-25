@@ -1,12 +1,12 @@
 import { RequestError } from "zoltra/utils";
-import { App } from "../core";
+import { Zoltra } from "../core";
 import { ZoltraNext, ZoltraRequest, ZoltraResponse } from "./core";
 import { Methods } from "./route";
 
 export interface Plugin {
   name: string;
   version?: string;
-  install: (app: App) => Promise<void> | void;
+  install: (app: Zoltra) => Promise<void> | void;
 }
 
 export interface PluginError {
@@ -24,7 +24,7 @@ export type ErrorHandler = (
 
 export interface ErrorPluginOptions {
   name: string;
-  install?: (app: App) => void;
+  install?: (app: Zoltra) => void;
   handler: ErrorHandler;
 }
 

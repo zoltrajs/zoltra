@@ -1,5 +1,4 @@
 import { IncomingMessage, ServerResponse } from "http";
-import { CorsOptions } from "./plugin";
 
 export type ZoltraRequest = IncomingMessage;
 export type ZoltraResponse = ServerResponse;
@@ -23,7 +22,6 @@ export interface ZoltraConfig {
   DATABASE_URL?: string;
   LOG_LEVEL: "debug" | "info" | "warn" | "error";
   LOG_FILE?: string;
-  corsOptions?: CorsOptions;
   experimetal?: {
     router?: {
       cache?: {
@@ -31,4 +29,14 @@ export interface ZoltraConfig {
       };
     };
   };
+}
+
+export interface StaticOptions {
+  cacheControl?: boolean;
+  maxAge?: number;
+  immutable?: boolean;
+  extensions?: string[];
+  acceptRanges?: boolean;
+  lastModified?: boolean;
+  etag?: boolean;
 }

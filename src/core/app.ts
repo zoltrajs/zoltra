@@ -7,9 +7,18 @@ import { bodyParser } from "middleware/body-parser";
 import dotenv from "dotenv";
 import { ConfigManager } from "zoltra/config";
 import { config as Config } from "config/read";
-import { ErrorHandler, Plugin, RequestRes, ZoltraHandler } from "../types";
+import {
+  ErrorHandler,
+  Plugin,
+  RequestRes,
+  StaticOptions,
+  ZoltraConfig,
+  ZoltraHandler,
+} from "../types";
+import { serverStatic } from "utils/static";
+import { generateWelcomePage } from "utils/client-home";
 
-class App {
+class Zoltra {
   private routeHandler: Router;
   private logger: Logger;
   private server?: http.Server;
@@ -17,11 +26,16 @@ class App {
   private plugins: Plugin[] = [];
   private errorHandlers: ErrorHandler[] = [];
   private middlewareChain: Array<ZoltraHandler> = [];
+  private _homeRouteInitialized = false;
 
   constructor() {
     this.routeHandler = new Router();
-    this.logger = new Logger("App");
+    this.logger = new Logger("Zoltra");
     this.loadEnv();
+  }
+
+  static static(rootDir: string, options: StaticOptions = {}) {
+    return serverStatic(rootDir, options);
   }
 
   public register(plugin: Plugin) {
@@ -42,8 +56,43 @@ class App {
     }
   }
 
+  public link(path: string, handler: ZoltraHandler) {}
+
+  public home(handler: ZoltraHandler) {
+    this._homeRouteInitialized = true;
+    this.routeHandler.registerHomeRoute(handler);
+  }
+
+  private _setupDefaultHomeRoute() {
+    if (!this._homeRouteInitialized) {
+      this.routeHandler.registerHomeRoute((_, res) => {
+        // Set comprehensive CSP headers
+        res.setHeader(
+          "Content-Security-Policy",
+          `
+        default-src 'self';
+        img-src 'self' data: https://raw.githubusercontent.com https://ka-f.fontawesome.com;
+        script-src 'self' https://cdn.tailwindcss.com https://kit.fontawesome.com;
+        style-src 'self' 'unsafe-inline' https://cdn.tailwindcss.com https://fonts.googleapis.com https://ka-f.fontawesome.com;
+        font-src 'self' https://fonts.gstatic.com https://ka-f.fontawesome.com;
+        connect-src 'self' https://ka-f.fontawesome.com;
+        frame-src 'none';
+        object-src 'none';
+      `
+            .replace(/\n/g, "")
+            .replace(/\s+/g, " ")
+            .trim()
+        );
+
+        res.send(generateWelcomePage);
+      });
+    }
+  }
+
   private handler() {
     return async (req: IncomingMessage, res: ServerResponse) => {
+      res.setHeader("X-Powered-By", "Zoltra");
+
       const next = async (error?: Error | unknown) => {
         if (error) await this.handleError(error, req, res);
       };
@@ -76,6 +125,7 @@ class App {
   // Error Handling
   private defaultErrorHandler(
     error: unknown,
+    // @ts-ignore
     req: IncomingMessage,
     res: ServerResponse
   ) {
@@ -120,28 +170,99 @@ class App {
       this.statusCode = code;
       return this;
     };
+
+    res.send = function (data: unknown) {
+      if (typeof data === "object") {
+        this.setHeader("Content-Type", "application/json");
+        this.end(JSON.stringify(data));
+      } else {
+        this.setHeader("Content-Type", "text/html");
+        this.end(data);
+      }
+    };
   }
 
   private enhanceRequest(req: http.IncomingMessage) {
     req.configManger = this.configManger;
   }
 
-  public async start() {
-    this.configManger.createDir();
+  public async start(maxAttempts = 5) {
     await this.initializePlugins();
+    this._setupDefaultHomeRoute();
     await this.routeHandler.loadRoutes();
-
-    this.server = http.createServer(this.handler());
+    this.configManger.createDir();
     const config = await Config.import();
-    // this.register(CorsPlugin(config.corsOptions));
-    this.routeHandler.setCacheEnabled(
-      config.experimetal?.router?.cache?.enabled ?? true
-    );
-    this.configManger.configToJSON(config);
-    this.configManger.createCachePath();
-    this.server.listen(config.PORT, () => {
-      this.logger.info(`Server running on http://localhost:${config.PORT}`);
-    });
+
+    let port = config.PORT;
+
+    this._tryStartServer(port, config, maxAttempts);
+  }
+
+  private _tryStartServer(
+    initialPort: number,
+    config: ZoltraConfig,
+    maxAttempts: number
+  ) {
+    this._validatePort(initialPort);
+
+    let attempts = 0;
+    let currentPort = initialPort;
+
+    const tryStart = (port: number) => {
+      this.server = http.createServer(this.handler());
+      this.routeHandler.setCacheEnabled(
+        config.experimetal?.router?.cache?.enabled ?? true
+      );
+      this.configManger.configToJSON(config);
+      this.configManger.createCachePath();
+
+      this.server
+        .listen(port, () => {
+          this.logger.info(`Server running on http://localhost:${port}`);
+        })
+        .on("error", (err: NodeJS.ErrnoException) => {
+          if (err.code === "EADDRINUSE") {
+            attempts++;
+            currentPort = port + 1;
+
+            if (attempts >= maxAttempts) {
+              this.logger.error(
+                `No available ports (tried ${initialPort}-${port})`,
+                {
+                  name: "PortConflictError",
+                  message: "All candidate ports are in use",
+                  stack: "",
+                },
+                {
+                  details: {
+                    initialPort,
+                    maxAttempts,
+                    lastAttemptedPort: port,
+                  },
+                }
+              );
+              return;
+            }
+
+            this.logger.warn(`Port ${port} in use, trying ${currentPort}...`);
+            tryStart(currentPort);
+          } else {
+            this.logger.error(`Critical server error: ${err.message}`, {
+              name: err.name,
+              message: err.message,
+              stack: err.stack,
+            });
+          }
+        });
+    };
+
+    tryStart(initialPort);
+  }
+
+  private _validatePort(port: number) {
+    if (typeof port !== "number" || port < 5000 || port > 65535) {
+      throw new Error(`Invalid port: ${port}. Must be 5000-65535`);
+    }
   }
 
   public async stop() {
@@ -155,4 +276,4 @@ class App {
   }
 }
 
-export default App;
+export default Zoltra;
