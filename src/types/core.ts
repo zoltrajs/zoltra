@@ -32,11 +32,15 @@ export interface ZoltraConfig {
 }
 
 export interface StaticOptions {
+  prefix: string;
+  extensions?: string[];
+  etag?: boolean;
+  lastModified?: boolean;
+  acceptRanges?: boolean;
   cacheControl?: boolean;
   maxAge?: number;
   immutable?: boolean;
-  extensions?: string[];
-  acceptRanges?: boolean;
-  lastModified?: boolean;
-  etag?: boolean;
+  fallthrough?: boolean;
+  mimeTypes?: Record<string, string>;
+  debug?: boolean;
 }
