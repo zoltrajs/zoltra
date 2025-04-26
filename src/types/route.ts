@@ -1,5 +1,8 @@
 import { ZoltraHandler, ZoltraRequest } from "./core";
 
+/**
+ * HTTP methods supported by Zoltra routes.
+ */
 export type Methods =
   | "GET"
   | "POST"

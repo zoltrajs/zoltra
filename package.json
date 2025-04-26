@@ -1,6 +1,6 @@
 {
   "name": "zoltra",
-  "version": "0.1.0-beta.4",
+  "version": "0.1.0-beta.5",
   "description": "A lightweight, plugin-first Node.js framework for building fast and scalable web servers",
   "main": "dist/index.cjs",
   "module": "dist/index.js",
