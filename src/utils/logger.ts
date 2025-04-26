@@ -81,9 +81,7 @@ export class Logger {
   }
 
   // TODO: Implement log to file
-  private logToFile(logEntry: LogData) {
-    // This is a placeholder for actual file logging implementation
-  }
+  private logToFile(logEntry: LogData) {}
 
   private getColorForLevel(level: LogLevel): string {
     switch (level) {
@@ -116,20 +114,31 @@ export class Logger {
   }
 
   public error(message: string, error?: Error, data?: Record<string, unknown>) {
+    const displayErrObj = this.config.error.displayErrObj;
+    const showStack = this.config.error.showStack;
+    const includeErrorMessage = this.config.error.includeErrorMessage;
+
+    let msg = message;
+
+    const logData = { ...data };
+
     if (error) {
-      return this.log("error", message, {
-        ...data,
-        error: {
-          name: error?.name,
-          message: error?.message,
-          stack:
-            this.config.NODE_ENV === "development" ? error?.stack : undefined,
-        },
-      });
+      msg =
+        includeErrorMessage && error.message
+          ? `${message} - ${colorText(error.message, "bold", "red")}`
+          : message;
+
+      if (displayErrObj) {
+        logData.error = {
+          name: error.name,
+          message: includeErrorMessage ? error.message : undefined,
+          ...(showStack && { stack: error.stack }), // Conditionally add stack
+        };
+      }
     }
 
-    this.log("error", message, {
-      ...data,
+    this.log("error", msg, {
+      ...logData,
     });
   }
 

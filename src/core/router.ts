@@ -188,15 +188,17 @@ export class Router {
       this.logger.debug("Request completed successfully");
     } catch (error) {
       const err = error as Error;
-      this.logger.error("Request handling failed", {
-        name: "RequestHandlerError",
+      this.logger.error(`Route handler error for ${req.url}`, {
+        name: "RouteHandlerError",
         message: err.message,
         stack: err.stack,
       });
 
-      res
-        .status(500)
-        .json({ error: "Internal Server Error", message: err.message });
+      res.status(500).json({
+        error: `Route handler error for ${req.url}`,
+        message: err.message,
+        success: false,
+      });
     }
   }
 
