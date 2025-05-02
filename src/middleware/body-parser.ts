@@ -1,6 +1,5 @@
-import { IncomingMessage } from "http";
+import { IncomingMessage, ServerResponse } from "http";
 import { Logger } from "../utils/logger";
-import { ServerResponse } from "http";
 
 const logger = new Logger("BodyParser");
 

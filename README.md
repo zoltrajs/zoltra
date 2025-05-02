@@ -53,20 +53,20 @@ Zoltra uses **File-Based Routing**, which means you define routes simply by crea
 **Example**
 
 ```ts
-// routes/user.js
+// routes/users.js
 import { defineRoutes } from "zoltra";
 import { getUserById, getUsers } from "../controllers/users.controller";
 
 const userRoutes = defineRoutes([
   {
     method: "GET",
-    path: "/api/users",
+    path: "/",
     handler: getUsers,
     middleware: [],
   },
   {
     method: "GET",
-    path: "/api/users/:id",
+    path: "/:id",
     handler: getUserById,
   },
 ]);
