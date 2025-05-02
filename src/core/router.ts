@@ -3,6 +3,7 @@ import { Logger } from "../utils/logger";
 import path from "path";
 import { existsSync, readdirSync } from "fs";
 import {
+  Methods,
   Route,
   ZoltraHandler,
   ZoltraNext,
@@ -21,30 +22,27 @@ export class Router {
 
   constructor() {
     this.cache = new RouteCache();
+    this.initializeRouteCache();
+  }
 
-    this.cache.init(this.routes).catch((error) => {
-      this.logger.debug(`Failed to initialize route cache: ${error.message}`);
-    });
+  private initializeRouteCache() {
+    if (this.cacheEnabled) {
+      this.cache.init(this.routes).catch((error) => {
+        this.logger.debug(`Failed to initialize route cache: ${error.message}`);
+      });
+    }
   }
 
   public setCacheEnabled(_enabled: boolean) {
     this.cacheEnabled = _enabled;
   }
 
-  public registerHomeRoute(handler: ZoltraHandler) {
-    const existingIndex = this.routes.findIndex(
-      (route) => route.path === "/" && route.method === "GET"
-    );
-
-    if (existingIndex >= 0) {
-      this.routes[existingIndex].handler = handler;
-    } else {
-      this._homeRoute = {
-        path: "/",
-        method: "GET",
-        handler,
-      };
+  public addRoute(path: string, method: Methods, handler: ZoltraHandler) {
+    if (typeof handler !== "function") {
+      throw new Error(`Handler for ${method} ${path} must be a function`);
     }
+
+    this._homeRoute = { path, method, handler };
   }
 
   public async loadRoutes() {
@@ -56,7 +54,7 @@ export class Router {
       this.routes = routeModules.flat();
 
       if (this._homeRoute) {
-        this.routes.push(this._homeRoute);
+        this.routes.unshift(this._homeRoute);
       }
 
       this.logger.info(`Loaded ${this.routes.length} routes`);

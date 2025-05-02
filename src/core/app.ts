@@ -105,23 +105,22 @@ class Zoltra {
 
   /**
    * Sets the handler for the root ("/") route.
-   * @param handler - The route handler for the home route.
    * @example
-   * app.home((req, res) => res.send("Welcome to Zoltra!"));
+   * app.home((req, res) => res.send("Hello world!"));
    */
   public home(handler: ZoltraHandler) {
     this._homeRouteInitialized = true;
-    this.routeHandler.registerHomeRoute(handler);
+    this.routeHandler.addRoute("/", "GET", handler);
   }
 
   /**
    * Sets up a default handler for the root ("/") route if none is specified.
-   * @internal
    */
   private _setupDefaultHomeRoute() {
     if (!this._homeRouteInitialized) {
-      this.routeHandler.registerHomeRoute((_, res) => {
+      this.routeHandler.addRoute("/", "GET", (_, res) => {
         // Set comprehensive CSP headers
+
         res.setHeader(
           "Content-Security-Policy",
           `
@@ -390,7 +389,6 @@ class Zoltra {
 
   private _logExperimentalWarn(config: ZoltraConfig) {
     if (!config.experimental || typeof config.experimental !== "object") {
-      console.log("Experimental config is invalid or disabled");
       return;
     }
 
