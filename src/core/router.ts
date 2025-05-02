@@ -82,7 +82,8 @@ export class Router {
         return Promise.all(
           files.map(async (file) => {
             const modulePath = path.join(routesDir, file);
-            return this.loadRouteModule(modulePath);
+            const basePath = file.replace(/\.(js|ts)$/, "");
+            return this.loadRouteModule(modulePath, basePath);
           })
         );
       }
@@ -91,7 +92,8 @@ export class Router {
         files.map(async (file) => {
           const modulePath = path.join(routesDir, file);
           const routeURL = pathToFileURL(modulePath).href;
-          return this.loadRouteModule(routeURL);
+          const basePath = file.replace(/\.(js|ts)$/, "");
+          return this.loadRouteModule(routeURL, basePath);
         })
       );
     } catch (error) {
@@ -100,19 +102,26 @@ export class Router {
     }
   }
 
-  private async loadRouteModule(modulePath: string): Promise<Route[]> {
+  private async loadRouteModule(
+    modulePath: string,
+    basePath: string
+  ): Promise<Route[]> {
     try {
       const { isTypeScript } = this.getRoutesDirectory();
 
       if (isTypeScript) {
         const module = require(modulePath);
         this.logModuleError(module, modulePath);
-        return module.routes || [];
+        const routes: Route[] = module.routes || [];
+        const modifiedRoutes = this.prefixRoutesWithBasePath(routes, basePath);
+        return modifiedRoutes;
       }
 
       const module = await import(modulePath);
       this.logModuleError(module, modulePath);
-      return module.routes || [];
+      const routes: Route[] = module.routes || [];
+      const modifiedRoutes = this.prefixRoutesWithBasePath(routes, basePath);
+      return modifiedRoutes;
     } catch (error) {
       this.logger.error(
         `Failed to load route module: ${modulePath}`,
@@ -350,5 +359,30 @@ export class Router {
     );
 
     await middlewareChain();
+  }
+
+  private prefixRoutesWithBasePath(routes: Route[], basePath: string): Route[] {
+    if (!basePath) return routes; // Return original if no basePath
+
+    // Normalize basePath - remove leading/trailing slashes
+    const normalizedBasePath = basePath.replace(/^\/|\/$/g, "");
+
+    return routes.map((route) => {
+      if (!route.path) return route; // Skip if no path exists
+
+      // Normalize route path - remove leading slashes
+      const normalizedRoutePath = route.path.replace(/^\//, "");
+
+      // Handle empty path case
+      const finalPath = normalizedRoutePath
+        ? `/${normalizedBasePath}/${normalizedRoutePath}`
+        : `/${normalizedBasePath}`;
+
+      // Remove any duplicate slashes that may have been created
+      return {
+        ...route,
+        path: finalPath.replace(/\/+/g, "/"),
+      };
+    });
   }
 }
