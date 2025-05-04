@@ -57,7 +57,7 @@ Zoltra uses **File-Based Routing**, which means you define routes simply by crea
 import { defineRoutes } from "zoltra";
 import { getUserById, getUsers } from "../controllers/users.controller";
 
-const userRoutes = defineRoutes([
+export const routes = defineRoutes([
   {
     method: "GET",
     path: "/",
@@ -70,8 +70,6 @@ const userRoutes = defineRoutes([
     handler: getUserById,
   },
 ]);
-
-export const routes = userRoutes;
 ```
 
 Zoltra handles your server's route management automatically, allowing you to focus on building the logic without needing to manually configure routes in your server code.
