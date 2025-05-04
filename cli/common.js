@@ -41,9 +41,9 @@ export function getAvailableEnvFiles() {
 }
 
 export const readConfig = () => {
-  const tsConfig = path.join(process.cwd(), "/tsconfig.json");
+  const tsConfig = path.join(process.cwd(), "tsconfig.json");
   const extention = existsSync(tsConfig) ? ".ts" : ".js";
-  const dir = path.join(process.cwd(), `/zoltra.config${extention}`);
+  const dir = path.join(process.cwd(), `zoltra.config${extention}`);
 
   try {
     const content = readFileSync(dir, "utf-8");

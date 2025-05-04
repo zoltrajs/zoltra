@@ -3,6 +3,10 @@ import * as path from "path";
 import { Logger } from "zoltra";
 import { watchFiles } from "./watcher.js";
 import { spawn } from "child_process";
+import { cleanOrphanedFiles } from "../shared/cleanOrphans.js";
+import { removeExtensionDuplicates } from "../shared/cleaner.js";
+import { readConfig } from "../../common.js";
+import { delay } from "@zoltra-toolkit/node";
 
 const logger = new Logger("FileWatcher");
 
@@ -61,7 +65,7 @@ export const startTsWatcher = async (serverPath) => {
       fs.mkdirSync(outDir, { recursive: true });
     }
     // Function to compile TypeScript files
-    function compileTypeScript(changedFilePath) {
+    async function compileTypeScript(changedFilePath) {
       const program = ts.createProgram(parsedConfig.fileNames, compilerOptions);
       const emitResult = program.emit();
 
@@ -119,6 +123,21 @@ export const startTsWatcher = async (serverPath) => {
         logger.info(
           `✅ Compiled ${changedFilePath} in ${getDuration(durationMs)}`
         );
+        await cleanOrphanedFiles(logger)
+          .then(
+            (count) =>
+              count >= 1 && logger.info(`Removed ${count} orphaned files`)
+          )
+          .catch((err) => logger.error("Error:", err));
+
+        await removeExtensionDuplicates(
+          readConfig().experimental?.dev?.turboClient,
+          logger
+        ).then(
+          (count) =>
+            count >= 1 && logger.info(`Removed ${count} duplicate files`)
+        );
+        await delay(300);
         startServer(serverPath);
       }
     }

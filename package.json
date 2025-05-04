@@ -1,6 +1,6 @@
 {
   "name": "zoltra",
-  "version": "0.1.0-beta.7",
+  "version": "0.1.0-beta.8",
   "description": "A lightweight, plugin-first Node.js framework for building fast and scalable web servers",
   "main": "dist/index.cjs",
   "module": "dist/index.js",
@@ -70,6 +70,8 @@
     "typescript": "^5.8.2"
   },
   "dependencies": {
+    "@swc/core": "^1.11.24",
+    "@zoltra-toolkit/node": "^0.1.0-alpha.1",
     "chokidar": "^4.0.3",
     "commander": "^13.1.0",
     "dotenv": "^16.4.7",

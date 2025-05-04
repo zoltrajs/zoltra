@@ -1,6 +1,6 @@
 import { config as DefaultConfig } from "..";
 import { existsSync } from "fs";
-import path from "path";
+import path, { join } from "path";
 import { ZoltraConfig } from "zoltra/types";
 import { Logger } from "../../utils";
 import { pathToFileURL } from "url";
@@ -18,9 +18,30 @@ const importConfig = async (): Promise<ZoltraConfig> => {
       routesDir = path.join(process.cwd(), "dist/");
     }
 
+    const configPaths = [
+      join(routesDir, "zoltra.config.js"),
+      join(routesDir, "zoltra.config.mjs"),
+      join(routesDir, "zoltra.config.ts"),
+    ];
+
+    let config;
+    for (const path of configPaths) {
+      try {
+        const pathURL = pathToFileURL(path).href;
+        const module = await import(pathURL);
+        const default_ = module.default.default
+          ? module.default.default
+          : module.default;
+        config = default_;
+        break;
+      } catch (e) {
+        continue;
+      }
+    }
+
     const configPath = path.join(routesDir, `zoltra.config.js`);
 
-    if (!existsSync(configPath)) {
+    if (!config) {
       if (!configFileNotFoundLogged) {
         logger.error(
           `Config file not found at ${configPath} - Using default configuration.`,
@@ -37,10 +58,9 @@ const importConfig = async (): Promise<ZoltraConfig> => {
       return DefaultConfig;
     }
 
-    const routeURL = pathToFileURL(configPath).href;
-    const config = await import(routeURL);
+    // const config = await import(routeURL);
 
-    return isTypeScript ? config.default.default : config.default;
+    return config;
   } catch (error) {
     const err = error as Error;
     logger.error("Failed to read config - Switching to default", {
