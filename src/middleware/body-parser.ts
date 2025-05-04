@@ -28,14 +28,13 @@ export function bodyParser() {
 
       await next();
     } catch (error) {
+      const err = error as Error;
       logger.error("Body parsing failed", error as Error);
       res.statusCode = 400;
-      res.end(
-        JSON.stringify({
-          error: "Invalid request body",
-          details: error instanceof Error ? error.message : undefined,
-        })
-      );
+      return res.json({
+        error: "Invalid request body",
+        details: err.message,
+      });
     }
   };
 }

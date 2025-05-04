@@ -49,5 +49,13 @@ export default {
     }),
     visualizer({ open: true, filename: "bundle-analysis.html" }),
   ],
-  external: ["commander", "dotenv", "chokidar", "ora", "etag", "mime-types"],
+  external: [
+    "commander",
+    "dotenv",
+    "chokidar",
+    "ora",
+    "etag",
+    "mime-types",
+    "@swc/core",
+  ],
 };

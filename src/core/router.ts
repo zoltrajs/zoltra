@@ -12,6 +12,7 @@ import {
 } from "../types";
 import { parse, pathToFileURL } from "url";
 import RouteCache from "./cache/route-cache";
+import { readConfig } from "../config/read/read";
 
 export class Router {
   private routes: Route[] = [];
@@ -19,6 +20,7 @@ export class Router {
   private cacheEnabled: boolean = false;
   private _homeRoute: Route | null = null;
   private cache: RouteCache;
+  private config = readConfig();
 
   constructor() {
     this.cache = new RouteCache();
@@ -66,7 +68,8 @@ export class Router {
 
   private async importRouteModules(): Promise<Route[][]> {
     const { isTypeScript, routesDir } = this.getRoutesDirectory();
-    const filePattern = isTypeScript ? /\.(js|ts)$/ : /\.js$/;
+    const hc = this.config.experimental?.dev?.turboClient;
+    const filePattern = isTypeScript ? /\.(js|ts|mjs)$/ : /\.(js)$/;
     const excludePattern = /^(index|\.test|\.spec)\.(js|ts)$/;
 
     try {
@@ -78,11 +81,11 @@ export class Router {
         directory: routesDir,
       });
 
-      if (isTypeScript) {
+      if (!hc && isTypeScript) {
         return Promise.all(
           files.map(async (file) => {
             const modulePath = path.join(routesDir, file);
-            const basePath = file.replace(/\.(js|ts)$/, "");
+            const basePath = file.replace(/\.(js|ts|mjs)$/, "");
             return this.loadRouteModule(modulePath, basePath);
           })
         );
@@ -91,9 +94,9 @@ export class Router {
       return Promise.all(
         files.map(async (file) => {
           const modulePath = path.join(routesDir, file);
-          const routeURL = pathToFileURL(modulePath).href;
-          const basePath = file.replace(/\.(js|ts)$/, "");
-          return this.loadRouteModule(routeURL, basePath);
+          // const routeURL = pathToFileURL(modulePath).href;
+          const basePath = file.replace(/\.(js|ts|mjs)$/, "");
+          return this.loadRouteModule(modulePath, basePath);
         })
       );
     } catch (error) {
@@ -108,8 +111,9 @@ export class Router {
   ): Promise<Route[]> {
     try {
       const { isTypeScript } = this.getRoutesDirectory();
+      const hc = this.config.experimental?.dev?.turboClient;
 
-      if (isTypeScript) {
+      if (!hc && isTypeScript) {
         const module = require(modulePath);
         this.logModuleError(module, modulePath);
         const routes: Route[] = module.routes || [];
@@ -117,7 +121,8 @@ export class Router {
         return modifiedRoutes;
       }
 
-      const module = await import(modulePath);
+      const pathURL = pathToFileURL(modulePath).href;
+      const module = await import(pathURL);
       this.logModuleError(module, modulePath);
       const routes: Route[] = module.routes || [];
       const modifiedRoutes = this.prefixRoutesWithBasePath(routes, basePath);

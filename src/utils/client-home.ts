@@ -2,8 +2,7 @@
  * Generates the HTML content to be sent to the client's browser.
  *
  */
-export const generateWelcomePage = `
-<!DOCTYPE html>
+export const generateWelcomePage = `<!DOCTYPE html>
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
@@ -20,13 +19,13 @@ export const generateWelcomePage = `
       property="og:description"
       content="A lightweight, plugin-first Node.js framework for web servers."
     />
-    <meta property="og:image" content="https://raw.githubusercontent.com/zoltrajs/zoltra/main/meta/zoltrajs-logo.png" />
+    <meta property="og:image" content="https://raw.githubusercontent.com/zoltrajs/zoltra/main/meta/og-image.jpg" />
     <meta property="og:url" content="https://zoltra.dev" />
     <title>Zoltra - plugin-first Node.js framework for web servers</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
-      href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&family=Rubik:ital,wght@0,300..900;1,300..900&display=swap"
+      href="https://fonts.googleapis.com/css2?family=Noto+Naskh+Arabic:wght@400..700&family=Noto+Sans+Bengali:wght@100..900&family=Noto+Sans+Hebrew:wght@100..900&family=Noto+Sans+JP:wght@100..900&family=Noto+Sans+KR:wght@100..900&family=Noto+Sans+Thai:wght@100..900&family=Noto+Sans:ital,wght@0,100..900;1,100..900&display=swap"
       rel="stylesheet"
     />
     <link rel="icon" type="image/svg+xml" href="https://raw.githubusercontent.com/zoltrajs/zoltra/main/meta/favicon.ico" />
@@ -37,7 +36,9 @@ export const generateWelcomePage = `
     ></script>
     <style>
       body {
-        font-family: "Inter", sans-serif;
+        font-family: "Google Sans", "Noto Sans", "Noto Sans JP", "Noto Sans KR",
+          "Noto Naskh Arabic", "Noto Sans Thai", "Noto Sans Hebrew",
+          "Noto Sans Bengali", sans-serif;
       }
       .gradient-bg {
         background: linear-gradient(180deg, #0a0a0a 0%, #1a1a1a 100%);
@@ -95,8 +96,10 @@ export const generateWelcomePage = `
         background-clip: text;
         color: transparent;
       }
-      .font-rubik {
-        font-family: "Rubik", sans-serif;
+      .font-g-sans {
+        font-family: "Google Sans", "Noto Sans", "Noto Sans JP", "Noto Sans KR",
+          "Noto Naskh Arabic", "Noto Sans Thai", "Noto Sans Hebrew",
+          "Noto Sans Bengali", sans-serif;
       }
       .social-link {
         transition: transform 0.3s ease, color 0.3s ease;
@@ -116,16 +119,17 @@ export const generateWelcomePage = `
     <main
       class="flex flex-col items-center justify-center min-h-screen px-4 sm:px-6 lg:px-8 py-12"
     >
-      <div class="logo flex flex-col items-center gap-4 mb-6">
+      <div class="logo flex items-center gap-4 mb-6">
+        <img src="https://raw.githubusercontent.com/zoltrajs/zoltra/main/meta/zoltrajs-logo.png" width="60" height="60" />
         <h1
-          class="text-6xl font-medium gradient-text tracking-tight font-rubik"
+          class="text-4xl font-semibold gradient-text tracking-tight font-g-sans uppercase"
         >
           Zoltra
         </h1>
       </div>
 
       <p
-        class="description max-w-2xl text-center text-2xl leading-relaxed text-gray-100 font-medium mb-12 font-rubik"
+        class="description max-w-3xl text-center text-4xl leading-relaxed text-gray-100 font-bold mb-12 font-g-sans"
       >
         A lightweight, plugin-first Node.js framework for building fast and
         scalable web servers
@@ -143,16 +147,6 @@ export const generateWelcomePage = `
         </a>
 
         <a
-          href="https://zoltra.dev/learn"
-          class="card bg-black border border-neutral-700 rounded-lg p-6 hover:bg-neutral-800/30"
-        >
-          <h2 class="text-xl font-semibold mb-2">Learn →</h2>
-          <p class="text-sm text-gray-400">
-            Learn about Zoltra in an interactive course with quizzes!
-          </p>
-        </a>
-
-        <a
           href="https://zoltra.dev/examples"
           class="card bg-black border border-neutral-700 rounded-lg p-6 hover:bg-neutral-800/30"
         >
@@ -162,15 +156,7 @@ export const generateWelcomePage = `
           </p>
         </a>
 
-        <a
-          href="https://zoltra.dev/deploy"
-          class="card bg-black border border-neutral-700 rounded-lg p-6 hover:bg-neutral-800/30"
-        >
-          <h2 class="text-xl font-semibold mb-2">Deploy →</h2>
-          <p class="text-sm text-gray-400">
-            Instantly deploy your Zoltra site to a public URL.
-          </p>
-        </a>
+
       </div>
 
       <div class="flex gap-6 mt-12 text-white">
@@ -202,5 +188,4 @@ export const generateWelcomePage = `
       </div>
     </main>
   </body>
-</html>
-  `;
+</html>`;

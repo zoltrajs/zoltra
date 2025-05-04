@@ -90,6 +90,10 @@ export interface ZoltraConfig {
         enabled?: boolean;
       };
     };
+
+    dev?: {
+      turboClient?: boolean;
+    };
   };
 }
 
