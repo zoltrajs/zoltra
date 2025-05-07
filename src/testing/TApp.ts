@@ -10,10 +10,9 @@ import { Logger } from "../utils";
 
 export class TApp extends Zoltra {
   private router = new TRouter();
-  private TLogger: Logger;
+  public TLogger: Logger;
   constructor(logger: Logger) {
     super(true);
-    // this.worker = server;
     this.TLogger = logger;
   }
 
