@@ -14,5 +14,6 @@ declare module "http" {
     send: (data: any) => void;
     status: (code: number) => ServerResponse;
     logger: Logger;
+    outputData: { data: string; encoding: string; callback: Function }[];
   }
 }

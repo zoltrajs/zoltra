@@ -57,5 +57,6 @@ export default {
     "etag",
     "mime-types",
     "@swc/core",
+    "@zoltra-toolkit/node",
   ],
 };

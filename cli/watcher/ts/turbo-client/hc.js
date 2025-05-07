@@ -1,5 +1,8 @@
 import TurboClient from "./client.js";
+import TurboTestClient from "./test-client.js";
 
 const turboClient = new TurboClient();
 
-export default turboClient;
+const turboTestClient = new TurboTestClient();
+
+export { turboClient, turboTestClient };

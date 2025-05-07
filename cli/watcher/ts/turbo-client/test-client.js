@@ -1,45 +1,40 @@
-import { colorText, Logger } from "zoltra";
+import { Logger } from "zoltra";
 import { transformSync } from "@swc/core";
 import { watch } from "chokidar";
 import { readFileSync, writeFileSync, existsSync, mkdirSync } from "fs";
 import { dirname, resolve, relative } from "path";
-import { networkInterfaces as NetworkInterfaces } from "os";
 import { spawn } from "child_process";
-import {
-  getAvailableEnvFiles,
-  getPackageOpts,
-  readConfig,
-} from "../../../common.js";
-import { removeExtensionDuplicates } from "../../shared/cleaner.js";
-import { cleanOrphanedFiles } from "../../shared/cleanOrphans.js";
 import { delay } from "@zoltra-toolkit/node";
 import { addDotJsToImports, getDuration, removeComments } from "./shared.js";
+import { readConfig } from "../../../common.js";
+import { removeExtensionDuplicates } from "../../shared/cleaner.js";
+import { cleanOrphanedFiles } from "../../shared/cleanOrphans.js";
 
 let serverProcess = null;
 
-function startServer(logger, hasStarted) {
+const startTestServer = (logger, hasStarted, script) => {
   const startTime = Date.now();
   if (serverProcess) {
     serverProcess.kill();
   }
 
-  serverProcess = spawn("node", [`dist/server.mjs`], {
+  serverProcess = spawn("node", [script], {
     stdio: "inherit",
   });
 
   const endTime = Date.now();
   const duration = getDuration(endTime - startTime);
   if (!hasStarted) {
-    logger.info(`🚀 Zolta TurboClient ready! in ${duration}`);
+    logger.info(`🧪 Zolta TurboTest ready! in ${duration}`);
   }
-}
+};
 
-class TurboClient {
+class TurboTestClient {
+  #logger = new Logger("TurboTestClient");
+  #config = readConfig();
   #hasStarted = false;
-  #logger = new Logger("TurboClient");
   #SRC_DIR = resolve(".");
   #DIST_DIR = resolve("dist");
-  #config = readConfig();
 
   constructor() {
     this.#runTask();
@@ -66,28 +61,7 @@ class TurboClient {
     this.#hasStarted = true;
   }
 
-  #logInfo() {
-    const pkg = getPackageOpts();
-    const tag =
-      pkg.publishConfig.tag.slice(0, 1).toUpperCase() +
-      pkg.publishConfig.tag.slice(1);
-
-    const availableEnvs = getAvailableEnvFiles();
-    const config = readConfig();
-    console.log(`
-      ${colorText(`⚡ Zoltra.js ${pkg.version}`, "bold", "cyan")} (${tag})
-      -----------------------------------------
-      - 🌐 Local:        http://localhost:${config.PORT}
-      - 📡 IP Address:   ${getLocalIp()}
-      - 🧪 Environments: ${availableEnvs.join(", ") || "None"}
-      - 🔥 TurboClient (Experimental)
-      -----------------------------------------
-      `);
-
-    this.#logger.info(`⚡ Starting...`);
-  }
-
-  async #handleFile(filePath) {
+  async #handleFile(filePath, script) {
     if (!filePath.endsWith(".ts")) return;
 
     try {
@@ -137,7 +111,7 @@ class TurboClient {
 
         await delay(1000);
 
-        startServer(this.#logger, this.#hasStarted);
+        startTestServer(this.#logger, this.#hasStarted, script);
       }
     } catch (error) {
       this.#logger.error(
@@ -148,38 +122,20 @@ class TurboClient {
     }
   }
 
-  startWatch() {
-    this.#logInfo();
-    watch(".", {
+  startWatch(script) {
+    watch("test/", {
       persistent: true,
       ignoreInitial: false,
       ignored: [/(^|[/\\])\../, /node_modules/],
     })
       .on("ready", async () => {
         await delay(100);
-        startServer(this.#logger, this.#hasStarted);
+        startTestServer(this.#logger, this.#hasStarted, script);
         this.#setStart();
       })
-      .on("add", async (filePath) => this.#handleFile(filePath))
-      .on("change", async (filePath) => this.#handleFile(filePath));
+      .on("add", async (filePath) => this.#handleFile(filePath, script))
+      .on("change", async (filePath) => this.#handleFile(filePath, script));
   }
 }
 
-export default TurboClient;
-
-function getLocalIp() {
-  const networkInterfaces = NetworkInterfaces();
-  let localIp = "";
-
-  for (const interfaceName in networkInterfaces) {
-    const networkInterface = networkInterfaces[interfaceName];
-    for (const address of networkInterface) {
-      if (address.family === "IPv4" && !address.internal) {
-        localIp = address.address;
-        break;
-      }
-    }
-  }
-
-  return localIp;
-}
+export default TurboTestClient;

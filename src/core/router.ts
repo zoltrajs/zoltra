@@ -16,15 +16,18 @@ import { readConfig } from "../config/read/read";
 
 export class Router {
   private routes: Route[] = [];
-  private logger = new Logger("Router");
+  private blockLog = false;
   private cacheEnabled: boolean = false;
   private _homeRoute: Route | null = null;
   private cache: RouteCache;
   private config = readConfig();
+  private logger: Logger;
 
-  constructor() {
+  constructor(blocklog: boolean = false) {
     this.cache = new RouteCache();
     this.initializeRouteCache();
+    this.blockLog = blocklog;
+    this.logger = new Logger("Router", undefined, this.blockLog);
   }
 
   private initializeRouteCache() {
@@ -45,6 +48,14 @@ export class Router {
     }
 
     this._homeRoute = { path, method, handler };
+  }
+
+  public _addRoute(path: string, method: Methods, handler: ZoltraHandler) {
+    if (typeof handler !== "function") {
+      throw new Error(`Handler for ${method} ${path} must be a function`);
+    }
+
+    this.routes.push({ path, method, handler });
   }
 
   public async loadRoutes() {
@@ -155,13 +166,13 @@ export class Router {
     }
   }
 
-  private getRoutesDirectory() {
+  public getRoutesDirectory() {
     const isTypeScript = existsSync(path.join(process.cwd(), "tsconfig.json"));
-    let routesDir = path.join(process.cwd(), "routes");
+    let routesDir = path.join(process.cwd(), `routes`);
 
     // Handle compiled JavaScript in dist directory
     if (isTypeScript) {
-      routesDir = path.join(process.cwd(), "dist/routes");
+      routesDir = path.join(process.cwd(), `dist/routes`);
     }
 
     return { isTypeScript, routesDir };
