@@ -13,7 +13,8 @@
 
     /* Emit */
     "declaration": true,
-    "declarationMap": true,
+    "declarationMap": false,
+    "emitDeclarationOnly": true,
     "outDir": "./dist",
 
     /* Interop Constraints */
@@ -29,6 +30,7 @@
     /* Completeness */
     "skipLibCheck": true
   },
-  "include": ["src/**/*"],
+  // "include": ["src/**/*"],
+  "include": ["src"],
   "exclude": ["node_modules", "dist"]
 }

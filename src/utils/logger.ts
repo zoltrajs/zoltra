@@ -17,11 +17,13 @@ export class Logger {
   private readonly context: string;
   private request?: IncomingMessage;
   private config: ZoltraConfig = Config.read();
+  private blockLog?: boolean;
 
-  constructor(context?: string, req?: IncomingMessage) {
+  constructor(context?: string, req?: IncomingMessage, blockLog?: boolean) {
     this.context = context || "Application";
     this.request = req;
     this.loadConfig();
+    this.blockLog = blockLog;
   }
 
   private loadConfig() {
@@ -33,6 +35,8 @@ export class Logger {
     message: string,
     data?: Record<string, unknown>
   ) {
+    if (this.blockLog) return;
+
     const logEntry: LogData = {
       timestamp: new Date(),
       level,

@@ -5,7 +5,7 @@ import { Logger } from "zoltra";
 import { startTsWatcher } from "./ts/watch.js";
 import { getPackageOpts, readConfig } from "../common.js";
 import { startJsWatcher } from "./js/watch.js";
-import turboClient from "./ts/turbo-client/hc.js";
+import { turboClient } from "./ts/turbo-client/hc.js";
 
 const config = getPackageOpts();
 

@@ -31,14 +31,16 @@ class Zoltra {
   private errorHandlers: ErrorHandler[] = [];
   private middlewareChain: Array<ZoltraHandler> = [];
   private _homeRouteInitialized = false;
+  private blockLog: boolean = false;
 
   /**
    * Creates a new Zoltra instance.
    */
-  constructor() {
-    this.routeHandler = new Router();
-    this.logger = new Logger("Zoltra");
+  constructor(blockLog: boolean = false) {
+    this.routeHandler = new Router(blockLog);
+    this.logger = new Logger("Zoltra", undefined, this.blockLog);
     this.loadEnv();
+    this.blockLog = blockLog;
   }
 
   /**
@@ -200,7 +202,7 @@ class Zoltra {
 
     res.status(500).json({
       error: `Request handler error for ${req.url}`,
-      message: error instanceof Error ? error.message : String(error),
+      message: err.message,
       success: false,
     });
   }
