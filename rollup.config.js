@@ -56,7 +56,6 @@ export default {
     "ora",
     "etag",
     "mime-types",
-    "@swc/core",
     "@zoltra-toolkit/node",
   ],
 };

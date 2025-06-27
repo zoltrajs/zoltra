@@ -7,7 +7,7 @@ const logger = new Logger("DevCLI");
 export const runDev = () => {
   try {
     clearTerminal();
-    execSync(`zoltra-watch -s server.js -j`, {
+    execSync("zoltra-watch -s server.js -j", {
       stdio: "inherit",
       cwd: process.cwd(),
     });
@@ -24,7 +24,7 @@ export const runDev = () => {
 export const runDevTs = () => {
   try {
     clearTerminal();
-    execSync(`zoltra-watch -s dist/server.js -t`, {
+    execSync('tsc-watch --onsuccess "node dist/server.js"', {
       stdio: "inherit",
       cwd: process.cwd(),
     });

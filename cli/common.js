@@ -12,11 +12,11 @@ export const getRootDir = () => {
 };
 
 export const getPackageOpts = () => {
-  const config = JSON.parse(
+  const packageDotJson = JSON.parse(
     readFileSync(path.resolve(__dirname, "../package.json"), "utf-8")
   );
 
-  return config;
+  return packageDotJson;
 };
 
 export function clearTerminal() {

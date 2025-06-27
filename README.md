@@ -1,8 +1,7 @@
 <div align='center'>
   <img alt="Zoltra" src='https://raw.githubusercontent.com/zoltrajs/zoltra/main/meta/zoltrajs-logo.png' width="80" height="80" />
   <h1>Zoltra</h1>
-  <h3>Code Less. Ship Faster.</h3>
-  <p>A <strong>lightweight</strong>, plugin-first Node.js framework for building fast and scalable web servers</p>
+  <p>A <strong>lightweight</strong> and intuitive web server framework</p>
   
   [![npm](https://img.shields.io/npm/v/zoltra?color=2962FF)](https://www.npmjs.com/package/zoltra)
   [![License](https://img.shields.io/badge/license-MIT-6200EA)](LICENSE)
@@ -21,7 +20,7 @@
 1. Create a new project using Zoltra CLI:
 
    ```bash
-   npx zoltra@beta create myapp --language
+   npx zoltra@alpha create myapp --language
    ```
 
    Replace `--language` with either `--typescript` or `--javascript` depending on your preference.
@@ -78,4 +77,4 @@ Zoltra handles your server's route management automatically, allowing you to foc
 
 ## Alpha Phase Notice:
 
-Zoltra is currently in its **Alpha Phase** (Stage 1), which means a lot is still in progress. Expect frequent updates and improvements. We appreciate your feedback as the Zoltra team continues to evolve the framework!
+Zoltra is currently in its **Alpha Phase** (Stage 2), which means a lot is still in progress. Expect frequent updates and improvements. We appreciate your feedback as the Zoltra team continues to evolve the framework!

@@ -1,4 +1,6 @@
 import { IncomingMessage, ServerResponse } from "http";
+import { LoggerInterface } from "./core-interface";
+import { Plugin } from "../plugins";
 
 export type ZoltraRequest = IncomingMessage;
 export type ZoltraResponse = ServerResponse;
@@ -95,6 +97,10 @@ export interface ZoltraConfig {
       turboClient?: boolean;
     };
   };
+
+  plugins?: (string | Plugin)[];
+
+  disableHandlerError?: boolean;
 }
 
 export interface StaticOptions {
@@ -110,3 +116,20 @@ export interface StaticOptions {
   mimeTypes?: Record<string, string>;
   debug?: boolean;
 }
+
+type BuiltInEvent = "requestReceived" | "responseSent" | "error";
+
+export type EventNames<CustomEvents extends string = never> =
+  | BuiltInEvent
+  | CustomEvents;
+
+type BuiltInEventArgs = {
+  error: [Error, IncomingMessage, ServerResponse, LoggerInterface];
+  requestReceived: [IncomingMessage];
+  responseSent: [ServerResponse];
+};
+
+export type EventArgs<CustomEvents extends string = never> =
+  CustomEvents extends keyof BuiltInEventArgs
+    ? BuiltInEventArgs[CustomEvents]
+    : any[];

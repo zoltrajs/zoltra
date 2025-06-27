@@ -2,26 +2,26 @@
  * Generates the HTML content to be sent to the client's browser.
  *
  */
-export const generateWelcomePage = `<!DOCTYPE html>
+export const homeRouteContent = `<!DOCTYPE html>
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta
       name="description"
-      content="Zoltra is a lightweight, plugin-first Node.js framework for building fast and scalable web servers."
+      content="Zoltra is a lightweight and intuitive web server framework."
     />
     <meta
       property="og:title"
-      content="Zoltra - Plugin-First Node.js Framework"
+      content="Zoltra - A lightweight and intuitive web server framework"
     />
     <meta
       property="og:description"
-      content="A lightweight, plugin-first Node.js framework for web servers."
+      content="A lightweight, A lightweight and intuitive web server framework."
     />
     <meta property="og:image" content="https://raw.githubusercontent.com/zoltrajs/zoltra/main/meta/og-image.jpg" />
     <meta property="og:url" content="https://zoltra.dev" />
-    <title>Zoltra - plugin-first Node.js framework for web servers</title>
+    <title>Zoltra - A lightweight and intuitive web server framework</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
@@ -131,8 +131,7 @@ export const generateWelcomePage = `<!DOCTYPE html>
       <p
         class="description max-w-3xl text-center text-4xl leading-relaxed text-gray-100 font-bold mb-12 font-g-sans"
       >
-        A lightweight, plugin-first Node.js framework for building fast and
-        scalable web servers
+        A lightweight and intuitive web server framework
       </p>
 
       <div class="grid grid-cols-1 sm:grid-cols-2 gap-6 max-w-4xl w-full">

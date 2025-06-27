@@ -1,12 +1,12 @@
 {
   "name": "zoltra",
-  "version": "0.1.0-beta.9",
-  "description": "A lightweight, plugin-first Node.js framework for building fast and scalable web servers",
+  "version": "0.1.0-alpha.2.0.1",
+  "description": "A lightweight and intuitive web server framework",
   "main": "dist/index.cjs",
   "module": "dist/index.js",
   "types": "dist/index.d.ts",
   "publishConfig": {
-    "tag": "beta"
+    "tag": "alpha"
   },
   "type": "module",
   "exports": {
@@ -20,8 +20,7 @@
     "./plugins": "./dist/plugins/index.d.ts",
     "./config": "./dist/config/index.d.ts",
     "./utils": "./dist/utils/index.d.ts",
-    "./testing": "./dist/testing/index.d.ts",
-    "./dist/testing/runner": "./dist/testing/runner.d.ts"
+    "./testing": "./dist/testing/index.d.ts"
   },
   "scripts": {
     "build": "rm -rf .rollup.cache && rm -rf tsconfig.tsbuildinfo && rollup -c",
@@ -33,12 +32,12 @@
   },
   "bin": {
     "zoltra": "./cli/index.js",
-    "zoltra-watch": "./cli/watcher/watch.js",
-    "zoltra-test": "./cli/watcher/test.js"
+    "zoltra-watch": "./cli/watcher/watch.js"
   },
   "files": [
     "dist",
-    "cli"
+    "cli",
+    "public"
   ],
   "license": "MIT",
   "repository": {
@@ -52,10 +51,7 @@
   "keywords": [
     "zoltrajs",
     "web-server",
-    "server",
-    "plugin-system",
-    "backend",
-    "modern-js"
+    "backend"
   ],
   "devDependencies": {
     "@rollup/plugin-babel": "^6.0.4",
@@ -75,7 +71,6 @@
     "typescript": "^5.8.2"
   },
   "dependencies": {
-    "@swc/core": "^1.11.24",
     "@zoltra-toolkit/node": "^0.1.0-alpha.2",
     "chokidar": "^4.0.3",
     "commander": "^13.1.0",

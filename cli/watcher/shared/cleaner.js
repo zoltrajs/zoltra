@@ -1,8 +1,13 @@
-import { promises as fs } from "fs";
+import { existsSync, promises as fs } from "fs";
 import path from "path";
 
 export async function removeExtensionDuplicates(turboEnabled, logger) {
-  const targetExt = turboEnabled ? ".js" : ".mjs"; // Files to DELETE
+  const isTs = path.join(process.cwd(), "tsconfig.json");
+
+  if (!existsSync(isTs)) {
+    return;
+  }
+
   const keepExt = turboEnabled ? ".mjs" : ".js"; // Files to KEEP
   let duplicatesRemoved = 0;
   const dir = path.join(process.cwd(), "/dist");

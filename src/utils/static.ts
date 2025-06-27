@@ -56,6 +56,11 @@ function createSafeStream(
 
 export function serveStatic(rootDir: string, options: StaticOptions) {
   const logger = new Logger("StaticHandler");
+
+  if (!options?.prefix) {
+    throw new Error("serveStatic missing required option 'prefix'");
+  }
+
   const {
     prefix = "",
     extensions = [],
@@ -205,7 +210,7 @@ export function serveStatic(rootDir: string, options: StaticOptions) {
     } catch (err) {
       const error = err as Error;
       logger.error(`Static serving error: ${error.message}`);
-      res.status(500).end("Internal Server Error");
+      res.status(500).json("Internal Server Error");
     }
   };
 }

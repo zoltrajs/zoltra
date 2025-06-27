@@ -1,15 +1,15 @@
-import { ZoltraConfig } from "zoltra/types";
+import { LoggerInterface, ZoltraConfig } from "zoltra/types";
 import path, { join } from "path";
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "fs";
-import { Logger } from "../utils";
 
 export class ConfigManager {
   private dir: string;
   public jsonConfig: string = "";
-  private logger = new Logger("ConfigManager");
+  private logger: LoggerInterface;
 
-  constructor() {
+  constructor(logger: LoggerInterface) {
     this.dir = this.loadDir();
+    this.logger = logger;
   }
 
   public loadDir() {
@@ -35,7 +35,7 @@ export class ConfigManager {
 
   public readConfig() {
     const config = readFileSync(path.join(this.dir, "config.json"), "utf-8");
-    return JSON.parse(config);
+    return JSON.parse(config) as ZoltraConfig;
   }
 
   public createCachePath() {

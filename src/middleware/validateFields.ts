@@ -30,9 +30,12 @@ import { ZoltraHandler } from "../types";
 const validateFields =
   (requiredFields: string[]): ZoltraHandler =>
   async (req, res, next) => {
-    const missingFields = requiredFields.filter(
-      (field) => !req.body[field] || req.body[field].toString().trim() === ""
-    );
+    const missingFields = requiredFields.filter((field) => {
+      const notObj = typeof req.body[field] !== "object";
+      return (
+        !req.body[field] || (notObj && req.body[field].toString().trim() === "")
+      );
+    });
 
     if (missingFields.length > 0) {
       return res.status(403).json({

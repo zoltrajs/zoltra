@@ -6,3 +6,5 @@
 *.cache
 tsconfig.tsbuildinfo
 *.html
+impl.md
+src/plugins/Plugin.md

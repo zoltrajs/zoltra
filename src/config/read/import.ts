@@ -1,13 +1,10 @@
 import { config as DefaultConfig } from "..";
 import { existsSync } from "fs";
 import path, { join } from "path";
-import { ZoltraConfig } from "zoltra/types";
-import { Logger } from "../../utils";
+import { LoggerInterface, ZoltraConfig } from "zoltra/types";
 import { pathToFileURL } from "url";
 
-const importConfig = async (): Promise<ZoltraConfig> => {
-  const logger = new Logger("ConfigReader");
-
+const importConfig = async (logger: LoggerInterface): Promise<ZoltraConfig> => {
   try {
     const isTypeScript = existsSync(path.join(process.cwd(), "tsconfig.json"));
 
@@ -57,8 +54,6 @@ const importConfig = async (): Promise<ZoltraConfig> => {
       }
       return DefaultConfig;
     }
-
-    // const config = await import(routeURL);
 
     return config;
   } catch (error) {

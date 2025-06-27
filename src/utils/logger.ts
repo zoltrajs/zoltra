@@ -1,7 +1,7 @@
 import { IncomingMessage } from "http";
-import { ZoltraConfig } from "types";
-import { config as Config } from "../config/read";
+import { LoggerInterface, ZoltraConfig } from "../types";
 import { colorText } from "./colors";
+import { readConfig } from "../config/read/read";
 
 type LogLevel = "debug" | "info" | "warn" | "error";
 type LogData = Record<string, unknown> & {
@@ -13,21 +13,17 @@ type LogData = Record<string, unknown> & {
   durationMs?: number;
 };
 
-export class Logger {
+export class Logger implements LoggerInterface {
   private readonly context: string;
   private request?: IncomingMessage;
-  private config: ZoltraConfig = Config.read();
+  private config: ZoltraConfig;
   private blockLog?: boolean;
 
   constructor(context?: string, req?: IncomingMessage, blockLog?: boolean) {
     this.context = context || "Application";
     this.request = req;
-    this.loadConfig();
+    this.config = readConfig();
     this.blockLog = blockLog;
-  }
-
-  private loadConfig() {
-    this.config = Config.read();
   }
 
   private log(
@@ -55,17 +51,7 @@ export class Logger {
         this.request.socket.remoteAddress;
     }
 
-    // Format differently based on environment
-    if (this.config.NODE_ENV === "development") {
-      this.logToConsole(logEntry);
-    } else {
-      this.logToJson(logEntry);
-    }
-
-    // Add file logging in production
-    if (this.config.NODE_ENV === "production") {
-      this.logToFile(logEntry);
-    }
+    this.logToConsole(logEntry);
   }
 
   private logToConsole(logEntry: LogData) {
@@ -79,13 +65,6 @@ export class Logger {
       Object.keys(rest).length ? rest : ""
     );
   }
-
-  private logToJson(logEntry: LogData) {
-    console.log(JSON.stringify(logEntry));
-  }
-
-  // TODO: Implement log to file
-  private logToFile(logEntry: LogData) {}
 
   private getColorForLevel(level: LogLevel): string {
     switch (level) {
@@ -150,8 +129,6 @@ export class Logger {
   public trackRequest(req: IncomingMessage) {
     const startTime = process.hrtime();
 
-    // const requestId = req.headers["x-request-id"] || this.generateRequestId();
-
     return {
       end: (res: { statusCode: number }) => {
         const [seconds, nanoseconds] = process.hrtime(startTime);
@@ -181,11 +158,4 @@ export class Logger {
     if (statusCode >= 200) return colorText(statusCode.toString(), "green");
     return colorText(statusCode.toString(), "white");
   }
-
-  // private generateRequestId(): string {
-  //   return (
-  //     Math.random().toString(36).substring(2, 15) +
-  //     Math.random().toString(36).substring(2, 15)
-  //   );
-  // }
 }
