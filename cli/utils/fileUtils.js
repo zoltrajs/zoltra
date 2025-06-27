@@ -30,15 +30,17 @@ export const createRootDir = async (projectName) => {
       return false;
     }
 
-    await mkdir(rootDir, { recursive: true }, (err, path) => {
-      if (err) {
-        logger.error("❌ Directory creation failed", {
-          stack: err.stack,
-          name: "DirectoryCreationError",
-          message: err.message,
-        });
-      }
-    });
+    if (projectName !== "./") {
+      await mkdir(rootDir, { recursive: true }, (err, path) => {
+        if (err) {
+          logger.error("❌ Directory creation failed", {
+            stack: err.stack,
+            name: "DirectoryCreationError",
+            message: err.message,
+          });
+        }
+      });
+    }
 
     return true;
   } catch (error) {
@@ -166,7 +168,9 @@ export const createFiles = async (projectName, isTs, starterFiles) => {
       contents[ext].files.helloController
     );
 
-    const serverCode = replaceInCode(common.server, "as Error", "");
+    const serverCode = isTs
+      ? common.server
+      : replaceInCode(common.server, "as Error", "");
 
     await createFile(`${projectName}/.gitignore`, common.gitignore);
     await createFile(`${projectName}/README.md`, common.readme);

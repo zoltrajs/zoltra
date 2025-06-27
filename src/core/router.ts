@@ -15,19 +15,21 @@ import RouteCache from "./cache/route-cache";
 import { readConfig } from "../config/read/read";
 
 export class Router {
-  private routes: Route[] = [];
+  routes: Route[] = [];
   private blockLog = false;
   private cacheEnabled: boolean = false;
   private _homeRoute: Route | null = null;
   private cache: RouteCache;
   private config = readConfig();
   private logger: Logger;
+  private _isTest: boolean;
 
-  constructor(blocklog: boolean = false) {
+  constructor(blocklog: boolean = false, isTest: boolean = false) {
     this.cache = new RouteCache();
     this.initializeRouteCache();
     this.blockLog = blocklog;
     this.logger = new Logger("Router", undefined, this.blockLog);
+    this._isTest = isTest;
   }
 
   private initializeRouteCache() {
@@ -48,14 +50,6 @@ export class Router {
     }
 
     this._homeRoute = { path, method, handler };
-  }
-
-  public _addRoute(path: string, method: Methods, handler: ZoltraHandler) {
-    if (typeof handler !== "function") {
-      throw new Error(`Handler for ${method} ${path} must be a function`);
-    }
-
-    this.routes.push({ path, method, handler });
   }
 
   public async loadRoutes() {
@@ -181,12 +175,13 @@ export class Router {
   public async handle(
     req: ZoltraRequest,
     res: ZoltraResponse,
-    next: ZoltraNext
+    next: ZoltraNext,
+    protocol: "https" | "http" = "http"
   ) {
     try {
       this.logger.debug("Starting request handling");
 
-      const url = new URL(req.url || "", `http://${req.headers.host}`);
+      const url = new URL(req.url || "", `${protocol}://${req.headers.host}`);
       const path = url.pathname;
       const method = req.method || "GET";
 
@@ -196,8 +191,9 @@ export class Router {
 
       if (!route) {
         this.logger.debug("No route found, sending 404");
-        res.statusCode = 404;
-        return res.json({ error: "Not Found", success: false });
+        return res
+          .status(400)
+          .json({ error: "Route Not Found", success: false });
       }
 
       this.logger.debug("Running middleware chain");
@@ -354,7 +350,9 @@ export class Router {
     const parsedUrl = parse(req.url!, true);
     const queries = parsedUrl.query;
 
-    req.query = queries || {};
+    if (!this._isTest) {
+      req.query = queries || {};
+    }
   }
 
   private async runMiddleware(

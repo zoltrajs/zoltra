@@ -43,7 +43,7 @@ export const fetchFiles = async () => {
     return downloadedFiles;
   } catch (error) {
     Spinner.stop(colorText("❌ Failed to download", "red"));
-    logger.error("Error fetching files:", error);
+    logger.error("Error fetching files", undefined);
     return;
   }
 };

@@ -7,6 +7,7 @@ import { getPackageOpts } from "./common.js";
 import { createApp } from "./commands/scaffold.js";
 import { updateBatch } from "./commands/update-deps.js";
 import { start, startTs } from "./commands/start.js";
+import generateAuthSecret from "./commands/gen-secret.js";
 
 const config = getPackageOpts();
 
@@ -68,13 +69,15 @@ program
   .description("Update project dependencies to their latest available versions")
   .action(updateBatch);
 
+program
+  .command("gen-secret")
+  .description("Generate a new JWT authentication secret")
+  .action(generateAuthSecret);
+
 // Error handling
 program.configureOutput({
   outputError: (err, write) => {
-    logger.error(`Error: ${err.replace("error: ", "")}`, {
-      message: err.replace("error: ", ""),
-      name: "CommandError",
-    });
+    logger.error(`Error: ${err.replace("error: ", "")}`);
     process.exit(1);
   },
 });

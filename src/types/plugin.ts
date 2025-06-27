@@ -1,11 +1,13 @@
 import { RequestError } from "zoltra/utils";
-import { Zoltra } from "../core";
 import { ZoltraNext, ZoltraRequest, ZoltraResponse } from "./core";
 import { Methods } from "./route";
+import { AppInterface } from "./core-interface";
 
 /**
  * Plugin interface for extending Zoltra functionality.
  * Plugins are registered with the Zoltra instance to add features like middleware or error handling.
+ *
+ * @deprecated Use Plugin class instead
  */
 export interface Plugin {
   /**
@@ -35,7 +37,7 @@ export interface Plugin {
    *   }
    * };
    */
-  install: (app: Zoltra) => Promise<void> | void;
+  install: (app: AppInterface) => Promise<void> | void;
 }
 
 /**
@@ -109,7 +111,7 @@ export interface ErrorPluginOptions {
    * @example
    * install: (app) => app.registerErrorHandler(handler)
    */
-  install?: (app: Zoltra) => void;
+  install?: (app: AppInterface) => void;
 
   /**
    * The error handler function to process errors.

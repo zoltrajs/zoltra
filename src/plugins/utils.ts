@@ -1,5 +1,5 @@
-import { Zoltra } from "zoltra/core";
-import { ErrorPluginOptions, Plugin } from "../types";
+import { AppInterface } from "../types";
+import { ErrorPluginOptions, Plugin } from "../types/plugin";
 
 /**
  * Creates a Zoltra plugin from a plugin configuration.
@@ -18,6 +18,8 @@ import { ErrorPluginOptions, Plugin } from "../types";
  * });
  * // Usage in app
  * app.register(myPlugin);
+ *
+ * @deprecated This function would be removed in stable release, use the `plugins` option inside `zoltra.config` instead
  */
 export function createPlugin(plugin: Plugin) {
   return plugin;
@@ -37,11 +39,13 @@ export function createPlugin(plugin: Plugin) {
  * });
  * // Usage in app
  * app.register(errorPlugin);
+ *
+ * @deprecated This function would be removed in stable release, use the `plugins` option inside `zoltra.config` instead
  */
 export function createErrorPlugin(options: ErrorPluginOptions) {
   return {
     ...options,
-    install: (app: Zoltra) => {
+    install: (app: AppInterface) => {
       app.registerErrorHandler(options.handler);
       options.install?.(app);
     },

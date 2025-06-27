@@ -2,5 +2,6 @@ import "./http";
 
 export * from "./core";
 export * from "./route";
-export * from "./plugin";
+// export * from "./plugin";
 export * from "./testing";
+export * from "./core-interface";

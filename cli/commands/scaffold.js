@@ -34,6 +34,10 @@ export const createApp = async (appName, options) => {
 
   const starterFiles = await fetchFiles();
 
+  if (typeof starterFiles === "undefined") {
+    return;
+  }
+
   await createFolders(appName);
 
   await createFiles(appName, isTs, starterFiles);

@@ -1,5 +1,5 @@
 import { createPlugin } from ".";
-import { CorsOptions } from "../types";
+import { CorsOptions } from "../types/plugin";
 
 export default function corsPlugin(options: CorsOptions = {}) {
   const {
@@ -10,7 +10,6 @@ export default function corsPlugin(options: CorsOptions = {}) {
     credentials = false,
     maxAge = 86400,
     preflightStatus = 204,
-    optionsSuccessStatus = 200,
   } = options;
 
   // Validate origins

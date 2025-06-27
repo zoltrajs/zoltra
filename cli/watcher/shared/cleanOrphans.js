@@ -1,7 +1,13 @@
-import { promises as fs } from "fs";
+import { existsSync, promises as fs } from "fs";
 import path from "path";
 
 export async function cleanOrphanedFiles(logger) {
+  const isTs = path.join(process.cwd(), "tsconfig.json");
+
+  if (!existsSync(isTs)) {
+    return;
+  }
+
   const srcDir = path.join(process.cwd(), "/");
   const distDir = path.join(process.cwd(), "dist");
 
