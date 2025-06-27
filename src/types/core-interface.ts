@@ -1,6 +1,7 @@
 import http from "http";
 import { EventArgs, EventNames, RequestRes, ZoltraHandler } from "./core";
 import { ErrorHandler, Plugin } from "./plugin";
+import { IncomingMessage, ServerResponse } from "http";
 
 export interface AppInterface {
   on<CustomEvents extends string = never>(
@@ -37,6 +38,11 @@ export interface AppInterface {
    * app.home((req, res) => res.send("Hello world!"));
    */
   home(handler: ZoltraHandler): void;
+
+  /**
+   * Core request handler for processing incoming requests.
+   */
+  handler(req: IncomingMessage, res: ServerResponse): Promise<void>;
 
   /**
    * Starts the Zoltra server, listening on the configured port.

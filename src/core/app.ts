@@ -5,7 +5,6 @@ import { colorText, Logger } from "../utils";
 import http from "http";
 import { bodyParser } from "middleware/body-parser";
 import dotenv from "dotenv";
-import { ConfigManager } from "zoltra/config";
 
 import {
   AppInterface,
@@ -34,7 +33,6 @@ class Zoltra implements AppInterface {
   private routeHandler: Router;
   private logger: Logger;
   private server?: http.Server | Server;
-  private configManger: ConfigManager;
   private plugins: Plugin[] = [];
   private errorHandlers: ErrorHandler[] = [];
   private middlewareChain: Array<ZoltraHandler> = [];
@@ -42,6 +40,7 @@ class Zoltra implements AppInterface {
   private eventEmitter: EventEmitter;
   private _plugins: Record<string, _Plugin>;
   private protocol: "https" | "http" = "http";
+  config: ZoltraConfig | null = null;
 
   /**
    * Creates a new Zoltra instance.
@@ -51,7 +50,6 @@ class Zoltra implements AppInterface {
     this.logger = new Logger("Zoltra");
     this.loadEnv();
     this.eventEmitter = new EventEmitter();
-    this.configManger = new ConfigManager(this.logger);
     this._plugins = {};
   }
 
@@ -170,44 +168,41 @@ class Zoltra implements AppInterface {
 
   /**
    * Core request handler for processing incoming requests.
-   * @internal
    */
-  private handler() {
-    return async (req: IncomingMessage, res: ServerResponse) => {
-      res.setHeader("X-Powered-By", "Zoltra");
+  public async handler(req: IncomingMessage, res: ServerResponse) {
+    res.setHeader("X-Powered-By", "Zoltra");
 
-      const next = async (error?: Error | any) => {
-        if (error) {
-          this.emit("error", error, req, res, this.logger);
-          await this.handleError(error, req, res);
-        }
-      };
-
-      try {
-        this.emit("requestReceived", req);
-        this.enhanceRequest(req);
-        this.enhanceResponse(res);
-        res.logger = this.logger;
-
-        await this.applyMiddleware(req, res);
-
-        const runMiddleware = async (index: number) => {
-          if (index >= this.middlewareChain.length) {
-            await this.routeHandler.handle(req, res, next, this.protocol);
-            return;
-          }
-
-          await this.middlewareChain[index](req, res, () =>
-            runMiddleware(index + 1)
-          );
-        };
-
-        await runMiddleware(0);
-        this.emit("responseSent", res);
-      } catch (error) {
-        this.handleError(error, req, res);
+    const next = async (error?: Error | any) => {
+      if (error) {
+        this.emit("error", error, req, res, this.logger);
+        await this.handleError(error, req, res);
       }
     };
+
+    try {
+      this.emit("requestReceived", req);
+      this.enhanceRequest(req);
+      this.enhanceResponse(res);
+      res.logger = this.logger;
+
+      await this.applyMiddleware(req, res);
+
+      const runMiddleware = async (index: number) => {
+        if (index >= this.middlewareChain.length) {
+          await this.routeHandler.handle(req, res, next, this.protocol);
+          return;
+        }
+
+        await this.middlewareChain[index](req, res, () =>
+          runMiddleware(index + 1)
+        );
+      };
+
+      await runMiddleware(0);
+      this.emit("responseSent", res);
+    } catch (error) {
+      this.handleError(error, req, res);
+    }
   }
 
   /**
@@ -229,7 +224,7 @@ class Zoltra implements AppInterface {
     const err = error as Error;
     this.emit("error", err, req, res, this.logger);
 
-    if (this.configManger.readConfig().disableHandlerError === true) {
+    if (this.config && this.config.disableHandlerError === true) {
       return;
     }
 
@@ -316,11 +311,11 @@ class Zoltra implements AppInterface {
 
   public async start(maxAttempts = 5) {
     const config = await importConfig(this.logger);
+    this.config = config;
     this._plugins = await loadPluginsAsync(this, config);
     await this.initializePlugins();
     this._setupDefaultHomeRoute();
     await this.routeHandler.loadRoutes();
-    this.configManger.createDir();
 
     let port = config.PORT;
     this.protocol = "http";
@@ -329,11 +324,11 @@ class Zoltra implements AppInterface {
 
   public async startHttps(key: string, cert: string, maxAttempts = 5) {
     const config = await importConfig(this.logger);
+    this.config = config;
     this._plugins = await loadPluginsAsync(this, config);
     await this.initializePlugins();
     this._setupDefaultHomeRoute();
     await this.routeHandler.loadRoutes();
-    this.configManger.createDir();
 
     let port = config.PORT;
     const serverConfig = new ServerConfig(this.logger);
@@ -345,7 +340,7 @@ class Zoltra implements AppInterface {
 
     this.protocol = "https";
     serverConfig.startHttps(
-      this.handler(),
+      this.handler,
       key,
       cert,
       port,
@@ -374,12 +369,8 @@ class Zoltra implements AppInterface {
     let currentPort = initialPort;
 
     const tryStart = (port: number) => {
-      this.server = http.createServer(this.handler());
-      this.routeHandler.setCacheEnabled(
-        config.experimental?.router?.cache?.enabled ?? true
-      );
-      this.configManger.configToJSON(config);
-      this.configManger.createCachePath();
+      this.server = http.createServer(this.handler);
+      this.routeHandler.setCacheEnabled(false);
 
       this.server
         .listen(port, () => {
