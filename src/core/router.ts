@@ -11,7 +11,7 @@ import {
   ZoltraResponse,
 } from "../types";
 import { parse, pathToFileURL } from "url";
-import RouteCache from "./cache/route-cache";
+// import RouteCache from "./cache/route-cache";
 import { readConfig } from "../config/read/read";
 
 export class Router {
@@ -19,26 +19,26 @@ export class Router {
   private blockLog = false;
   private cacheEnabled: boolean = false;
   private _homeRoute: Route | null = null;
-  private cache: RouteCache;
+  // private cache: RouteCache;
   private config = readConfig();
   private logger: Logger;
   private _isTest: boolean;
 
   constructor(blocklog: boolean = false, isTest: boolean = false) {
-    this.cache = new RouteCache();
-    this.initializeRouteCache();
+    // this.cache = new RouteCache();
+    // this.initializeRouteCache();
     this.blockLog = blocklog;
     this.logger = new Logger("Router", undefined, this.blockLog);
     this._isTest = isTest;
   }
 
-  private initializeRouteCache() {
-    if (this.cacheEnabled) {
-      this.cache.init(this.routes).catch((error) => {
-        this.logger.debug(`Failed to initialize route cache: ${error.message}`);
-      });
-    }
-  }
+  // private initializeRouteCache() {
+  //   if (this.cacheEnabled) {
+  //     this.cache.init(this.routes).catch((error) => {
+  //       this.logger.debug(`Failed to initialize route cache: ${error.message}`);
+  //     });
+  //   }
+  // }
 
   public setCacheEnabled(_enabled: boolean) {
     this.cacheEnabled = _enabled;
@@ -256,59 +256,61 @@ export class Router {
     method: string,
     req: IncomingMessage
   ): Route | undefined {
-    if (this.cacheEnabled) {
-      return this.findMatchingCachedRoute(path, method, req);
-    } else return this._findMatchingRoute(path, method, req);
+    // if (this.cacheEnabled) {
+    //   return this.findMatchingCachedRoute(path, method, req);
+    // } else return this._findMatchingRoute(path, method, req);
+
+    return this._findMatchingRoute(path, method, req);
   }
 
-  private findMatchingCachedRoute(
-    path: string,
-    method: string,
-    req: IncomingMessage
-  ): Route | undefined {
-    let toTalTime = 0;
+  // private findMatchingCachedRoute(
+  //   path: string,
+  //   method: string,
+  //   req: IncomingMessage
+  // ): Route | undefined {
+  //   let toTalTime = 0;
 
-    const start = process.hrtime.bigint();
-    // Try cache first, passing pathMatches for dynamic routes
-    let route = this.cache.getRoute(path, method, this.pathMatches.bind(this));
+  //   const start = process.hrtime.bigint();
+  //   // Try cache first, passing pathMatches for dynamic routes
+  //   let route = this.cache.getRoute(path, method, this.pathMatches.bind(this));
 
-    // If no exact match in cache, check routes with pathMatches
-    if (!route) {
-      route = this.routes.find((r) => {
-        const methodMatches = r.method === method;
-        const pathMatches = this.pathMatches(r.path, path);
-        return methodMatches && pathMatches;
-      });
+  //   // If no exact match in cache, check routes with pathMatches
+  //   if (!route) {
+  //     route = this.routes.find((r) => {
+  //       const methodMatches = r.method === method;
+  //       const pathMatches = this.pathMatches(r.path, path);
+  //       return methodMatches && pathMatches;
+  //     });
 
-      // Cache the result for future lookups
-      if (route) {
-        const currentRoutes = this.cache.getRoutes();
-        if (
-          !currentRoutes.some(
-            (r) => r.path === route!.path && r.method === route!.method
-          )
-        ) {
-          this.cache.updateRoutes([...currentRoutes, route]).catch((error) => {
-            this.logger.debug(`Failed to update cache: ${error.message}`);
-          });
-        }
-      }
-    }
+  //     // Cache the result for future lookups
+  //     if (route) {
+  //       const currentRoutes = this.cache.getRoutes();
+  //       if (
+  //         !currentRoutes.some(
+  //           (r) => r.path === route!.path && r.method === route!.method
+  //         )
+  //       ) {
+  //         this.cache.updateRoutes([...currentRoutes, route]).catch((error) => {
+  //           this.logger.debug(`Failed to update cache: ${error.message}`);
+  //         });
+  //       }
+  //     }
+  //   }
 
-    if (route) {
-      this.extractPathParams(route.path, path, req);
-      this.extractPathQuery(req);
-    } else {
-      this.logger.debug("No route matched");
-    }
+  //   if (route) {
+  //     this.extractPathParams(route.path, path, req);
+  //     this.extractPathQuery(req);
+  //   } else {
+  //     this.logger.debug("No route matched");
+  //   }
 
-    const end = process.hrtime.bigint();
-    toTalTime += Number(end - start) / 1e6;
+  //   const end = process.hrtime.bigint();
+  //   toTalTime += Number(end - start) / 1e6;
 
-    this.logger.debug(`Total time: ${toTalTime.toFixed(3)} ms`);
+  //   this.logger.debug(`Total time: ${toTalTime.toFixed(3)} ms`);
 
-    return route;
-  }
+  //   return route;
+  // }
 
   private pathMatches(routePath: string, requestPath: string): boolean {
     // Remove query parameters

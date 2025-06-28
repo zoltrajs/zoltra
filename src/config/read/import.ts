@@ -1,43 +1,73 @@
 import { config as DefaultConfig } from "..";
 import { existsSync } from "fs";
-import path, { join } from "path";
+import path from "path";
 import { LoggerInterface, ZoltraConfig } from "zoltra/types";
-import { pathToFileURL } from "url";
 
 const importConfig = async (logger: LoggerInterface): Promise<ZoltraConfig> => {
   try {
     const isTypeScript = existsSync(path.join(process.cwd(), "tsconfig.json"));
+    const DEPLOYMENT_ENV = process.env.DEPLOYMENT_ENV;
+    const NODE_ENV = process.env.NODE_ENV;
 
-    let routesDir = process.cwd();
+    let config: ZoltraConfig | null = null;
     let configFileNotFoundLogged = false;
 
+    if (NODE_ENV === "production" && DEPLOYMENT_ENV === "VERCEL") {
+      logger.info("[INFO] Running in Vercel production environment.");
+      // Always try to load from project root
+      const configPath = path.join(process.cwd(), "zoltra.config.js");
+      if (existsSync(configPath)) {
+        try {
+          // using require for CommonJS
+          const required = require(configPath);
+          config =
+            required.default && typeof required.default === "object"
+              ? required.default
+              : required;
+        } catch (e) {
+          logger.error(
+            `Failed to load config on Vercel: ${
+              e instanceof Error ? e.message : e
+            }`
+          );
+          config = DefaultConfig;
+        }
+      } else {
+        logger.warn(
+          `zoltra.config.js not found in project root on Vercel, using default.`
+        );
+        config = DefaultConfig;
+      }
+      return config || DefaultConfig;
+    }
+
+    // fallback normal behavior for non-Vercel environments
+    let routesDir = process.cwd();
     if (isTypeScript) {
-      routesDir = path.join(process.cwd(), "dist/");
+      routesDir = path.join(process.cwd(), "dist");
     }
 
     const configPaths = [
-      join(routesDir, "zoltra.config.js"),
-      join(routesDir, "zoltra.config.mjs"),
-      join(routesDir, "zoltra.config.ts"),
+      path.join(routesDir, "zoltra.config.js"),
+      path.join(routesDir, "zoltra.config.ts"),
     ];
 
-    let config;
-    for (const path of configPaths) {
+    for (const p of configPaths) {
       try {
-        const pathURL = pathToFileURL(path).href;
-        const module = await import(pathURL);
-        const default_ = module.default.default
-          ? module.default.default
-          : module.default;
-        config = default_;
-        break;
-      } catch (e) {
+        if (existsSync(p)) {
+          const required = require(p);
+          config =
+            required.default && typeof required.default === "object"
+              ? required.default
+              : required;
+          break;
+        }
+      } catch {
         continue;
       }
     }
 
-    const configPath = path.join(routesDir, `zoltra.config.js`);
-
+    const configPath = path.join(routesDir, "zoltra.config.js");
     if (!config) {
       if (!configFileNotFoundLogged) {
         logger.error(
@@ -63,7 +93,6 @@ const importConfig = async (logger: LoggerInterface): Promise<ZoltraConfig> => {
       message: err.message,
       name: err.name,
     });
-
     return DefaultConfig;
   }
 };
