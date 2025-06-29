@@ -44,6 +44,8 @@ export interface AppInterface {
    */
   handler(req: IncomingMessage, res: ServerResponse): Promise<void>;
 
+  loadRoutes(): Promise<void>;
+
   /**
    * Starts the Zoltra server, listening on the configured port.
    * @param maxAttempts - Maximum number of retry attempts if the port is in use.

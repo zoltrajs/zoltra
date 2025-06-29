@@ -51,6 +51,7 @@ class Zoltra implements AppInterface {
     this.loadEnv();
     this.eventEmitter = new EventEmitter();
     this._plugins = {};
+    this.handler = this.handler.bind(this);
   }
 
   on<CustomEvents extends string = never>(
@@ -166,6 +167,14 @@ class Zoltra implements AppInterface {
     }
   }
 
+  public async loadRoutes() {
+    if (!this.routeHandler._hasLoadedRoutes) {
+      this.routeHandler.loadRoutes();
+    } else {
+      this.logger.warn("Routes has already been loaded");
+    }
+  }
+
   /**
    * Core request handler for processing incoming requests.
    */
@@ -174,8 +183,7 @@ class Zoltra implements AppInterface {
 
     const next = async (error?: Error | any) => {
       if (error) {
-        this.emit("error", error, req, res, this.logger);
-        await this.handleError(error, req, res);
+        this.handleError(error, req, res);
       }
     };
 
@@ -190,16 +198,23 @@ class Zoltra implements AppInterface {
       const runMiddleware = async (index: number) => {
         if (index >= this.middlewareChain.length) {
           await this.routeHandler.handle(req, res, next, this.protocol);
+          this.emit("responseSent", res);
           return;
         }
 
-        await this.middlewareChain[index](req, res, () =>
-          runMiddleware(index + 1)
-        );
+        const middlewareTimeout = setTimeout(() => {
+          this.logger.warn(
+            `Middleware at index ${index} stalled for ${req.url}`
+          );
+        }, 20000); // Warn after 20s
+
+        await this.middlewareChain[index](req, res, () => {
+          clearTimeout(middlewareTimeout);
+          return runMiddleware(index + 1);
+        });
       };
 
       await runMiddleware(0);
-      this.emit("responseSent", res);
     } catch (error) {
       this.handleError(error, req, res);
     }
@@ -215,16 +230,28 @@ class Zoltra implements AppInterface {
     res: ServerResponse
   ) {
     if (res.headersSent) {
-      this.logger.warn(
-        "To Apply Custom Error handlers enable the 'disableHandlerError' option"
-      );
+      this.logger.warn("Cannot handle error: response headers already sent");
       return;
     }
 
-    const err = error as Error;
+    const err = error instanceof Error ? error : new Error(String(error));
     this.emit("error", err, req, res, this.logger);
 
-    if (this.config && this.config.disableHandlerError === true) {
+    if (this.config?.disableHandlerError) {
+      if (!this.eventEmitter.listenerCount("error")) {
+        this.logger.warn(
+          "disableHandlerError is enabled, but no 'error' event listeners are attached. Response may hang."
+        );
+      }
+      setTimeout(() => {
+        if (!res.writableEnded) {
+          this.logger.warn(
+            `Custom error handler did not close response for ${req.url}`
+          );
+          res.statusCode = 500;
+          res.end();
+        }
+      }, 5000); // 5-second timeout
       return;
     }
 
@@ -245,21 +272,19 @@ class Zoltra implements AppInterface {
    * Handles errors by invoking the registered error handler or default handler.
    * @internal
    */
-  private async handleError(
+  private handleError(
     error: unknown,
     req: IncomingMessage,
     res: ServerResponse
   ) {
-    const runErrorHandler = async (index: number) => {
-      if (index >= this.errorHandlers.length) {
-        return this.defaultErrorHandler(error, req, res);
-      }
+    // Normalize error to ensure it's an Error instance
+    const err = error instanceof Error ? error : new Error(String(error));
 
-      await this.errorHandlers[index](error, req, res, () =>
-        runErrorHandler(index + 1)
-      );
-    };
-    await runErrorHandler(0);
+    // Emit the "error" event for plugins to handle
+    this.emit("error", err, req, res, this.logger);
+
+    // Delegate to defaultErrorHandler for default behavior
+    this.defaultErrorHandler(err, req, res);
   }
 
   /**

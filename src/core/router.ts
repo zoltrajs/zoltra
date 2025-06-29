@@ -10,35 +10,22 @@ import {
   ZoltraRequest,
   ZoltraResponse,
 } from "../types";
-import { parse, pathToFileURL } from "url";
-// import RouteCache from "./cache/route-cache";
-import { readConfig } from "../config/read/read";
+import { pathToFileURL, parse } from "url";
 
 export class Router {
   routes: Route[] = [];
   private blockLog = false;
   private cacheEnabled: boolean = false;
   private _homeRoute: Route | null = null;
-  // private cache: RouteCache;
-  private config = readConfig();
   private logger: Logger;
   private _isTest: boolean;
+  public _hasLoadedRoutes: boolean = false;
 
   constructor(blocklog: boolean = false, isTest: boolean = false) {
-    // this.cache = new RouteCache();
-    // this.initializeRouteCache();
     this.blockLog = blocklog;
     this.logger = new Logger("Router", undefined, this.blockLog);
     this._isTest = isTest;
   }
-
-  // private initializeRouteCache() {
-  //   if (this.cacheEnabled) {
-  //     this.cache.init(this.routes).catch((error) => {
-  //       this.logger.debug(`Failed to initialize route cache: ${error.message}`);
-  //     });
-  //   }
-  // }
 
   public setCacheEnabled(_enabled: boolean) {
     this.cacheEnabled = _enabled;
@@ -64,6 +51,7 @@ export class Router {
         this.routes.unshift(this._homeRoute);
       }
 
+      this._hasLoadedRoutes = true;
       this.logger.info(`Loaded ${this.routes.length} routes`);
     } catch (error) {
       this.logger.error("Failed to load routes", error as Error);
@@ -73,7 +61,6 @@ export class Router {
 
   private async importRouteModules(): Promise<Route[][]> {
     const { isTypeScript, routesDir } = this.getRoutesDirectory();
-    const hc = this.config.experimental?.dev?.turboClient;
     const filePattern = isTypeScript ? /\.(js|ts|mjs)$/ : /\.(js)$/;
     const excludePattern = /^(index|\.test|\.spec)\.(js|ts)$/;
 
@@ -86,7 +73,7 @@ export class Router {
         directory: routesDir,
       });
 
-      if (!hc && isTypeScript) {
+      if (isTypeScript) {
         return Promise.all(
           files.map(async (file) => {
             const modulePath = path.join(routesDir, file);
@@ -116,9 +103,8 @@ export class Router {
   ): Promise<Route[]> {
     try {
       const { isTypeScript } = this.getRoutesDirectory();
-      const hc = this.config.experimental?.dev?.turboClient;
 
-      if (!hc && isTypeScript) {
+      if (isTypeScript) {
         const module = require(modulePath);
         this.logModuleError(module, modulePath);
         const routes: Route[] = module.routes || [];
@@ -161,12 +147,20 @@ export class Router {
   }
 
   public getRoutesDirectory() {
+    const DEPLOYMENT_ENV = process.env.DEPLOYMENT_ENV;
+    const NODE_ENV = process.env.NODE_ENV;
+    const isVercelProduction =
+      NODE_ENV === "production" && DEPLOYMENT_ENV === "VERCEL";
     const isTypeScript = existsSync(path.join(process.cwd(), "tsconfig.json"));
-    let routesDir = path.join(process.cwd(), `routes`);
+    let routesDir = path.join(process.cwd(), "routes");
 
     // Handle compiled JavaScript in dist directory
-    if (isTypeScript) {
-      routesDir = path.join(process.cwd(), `dist/routes`);
+    if (isVercelProduction) {
+      this.logger.info("[INFO] Running in Vercel production environment.");
+      // Always read from root
+      routesDir = path.join(process.cwd(), "routes");
+    } else if (isTypeScript && !isVercelProduction) {
+      routesDir = path.join(process.cwd(), "dist/routes");
     }
 
     return { isTypeScript, routesDir };
@@ -184,6 +178,9 @@ export class Router {
       const url = new URL(req.url || "", `${protocol}://${req.headers.host}`);
       const path = url.pathname;
       const method = req.method || "GET";
+      console.log(
+        `[INFO] Starting request handling with protocol: ${protocol} and method: ${method} for path: ${path}`
+      );
 
       this.logger.debug(`Processing ${method} ${path}`);
 
@@ -256,61 +253,8 @@ export class Router {
     method: string,
     req: IncomingMessage
   ): Route | undefined {
-    // if (this.cacheEnabled) {
-    //   return this.findMatchingCachedRoute(path, method, req);
-    // } else return this._findMatchingRoute(path, method, req);
-
     return this._findMatchingRoute(path, method, req);
   }
-
-  // private findMatchingCachedRoute(
-  //   path: string,
-  //   method: string,
-  //   req: IncomingMessage
-  // ): Route | undefined {
-  //   let toTalTime = 0;
-
-  //   const start = process.hrtime.bigint();
-  //   // Try cache first, passing pathMatches for dynamic routes
-  //   let route = this.cache.getRoute(path, method, this.pathMatches.bind(this));
-
-  //   // If no exact match in cache, check routes with pathMatches
-  //   if (!route) {
-  //     route = this.routes.find((r) => {
-  //       const methodMatches = r.method === method;
-  //       const pathMatches = this.pathMatches(r.path, path);
-  //       return methodMatches && pathMatches;
-  //     });
-
-  //     // Cache the result for future lookups
-  //     if (route) {
-  //       const currentRoutes = this.cache.getRoutes();
-  //       if (
-  //         !currentRoutes.some(
-  //           (r) => r.path === route!.path && r.method === route!.method
-  //         )
-  //       ) {
-  //         this.cache.updateRoutes([...currentRoutes, route]).catch((error) => {
-  //           this.logger.debug(`Failed to update cache: ${error.message}`);
-  //         });
-  //       }
-  //     }
-  //   }
-
-  //   if (route) {
-  //     this.extractPathParams(route.path, path, req);
-  //     this.extractPathQuery(req);
-  //   } else {
-  //     this.logger.debug("No route matched");
-  //   }
-
-  //   const end = process.hrtime.bigint();
-  //   toTalTime += Number(end - start) / 1e6;
-
-  //   this.logger.debug(`Total time: ${toTalTime.toFixed(3)} ms`);
-
-  //   return route;
-  // }
 
   private pathMatches(routePath: string, requestPath: string): boolean {
     // Remove query parameters
