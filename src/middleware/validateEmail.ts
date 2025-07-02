@@ -5,7 +5,7 @@ import { ZoltraHandler } from "../types";
  *
  * This middleware checks if the email field is present and if the email address
  * matches a regular expression for proper email formatting. If the email is invalid,
- * a 400 status with an error message will be returned.
+ * a `400` status with an error message will be returned.
  *
  * @param {ZoltraRequest} req - The request object containing the email field.
  * @param {ZoltraResponse} res - The response object to send error messages if validation fails.
@@ -13,9 +13,10 @@ import { ZoltraHandler } from "../types";
  * @returns {void}
  *
  * @example
+ * // routes/auth.ts
  * export const routes = defineRoutes([
  *  {
-      path: "/v1/auth/sign-up",
+      path: "/sign-up",
       method: "POST",
       handler: registerUser,
       middleware: [validateEmail]

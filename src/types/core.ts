@@ -92,10 +92,6 @@ export interface ZoltraConfig {
         enabled?: boolean;
       };
     };
-
-    dev?: {
-      turboClient?: boolean;
-    };
   };
 
   plugins?: (string | Plugin)[];

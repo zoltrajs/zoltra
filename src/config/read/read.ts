@@ -2,15 +2,14 @@ import { ZoltraConfig } from "../../types";
 import { existsSync, readFileSync } from "fs";
 import path from "path";
 import { config as DefaultConfig } from "../index";
+import { checkEnv } from "core/constants";
 
 export const readConfig = (): ZoltraConfig => {
   try {
-    const DEPLOYMENT_ENV = process.env.DEPLOYMENT_ENV;
-    const NODE_ENV = process.env.NODE_ENV;
-    const isVercelProduction =
-      NODE_ENV === "production" && DEPLOYMENT_ENV === "VERCEL";
+    const { IS_SERVERLESS, IS_PROD } = checkEnv();
+    const isServerLess = IS_PROD && IS_SERVERLESS;
 
-    const configFilePath = buildPath(isVercelProduction);
+    const configFilePath = buildPath(isServerLess);
 
     if (!existsSync(configFilePath)) {
       console.warn(
@@ -19,8 +18,8 @@ export const readConfig = (): ZoltraConfig => {
       return DefaultConfig;
     }
 
-    if (isVercelProduction) {
-      console.log("[INFO] Running in Vercel production environment.");
+    if (isServerLess) {
+      console.log("[INFO] Running on ServerLess production environment.");
       // Always read from root
       const required = require(configFilePath);
       const config = required.default || required;
@@ -63,8 +62,8 @@ const readRawConfig = (filePath: string) => {
   }
 };
 
-const buildPath = (isVercelProd: boolean) => {
-  if (isVercelProd) {
+const buildPath = (isServerLess: boolean) => {
+  if (isServerLess) {
     return path.join(process.cwd(), "zoltra.config.js");
   }
 

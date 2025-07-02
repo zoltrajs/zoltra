@@ -26,14 +26,17 @@ export interface Plugin {
 
   /**
    * Installs the plugin into the Zoltra instance.
-   * Configures the plugin’s functionality, such as adding middleware or routes.
+   * Configures the plugin’s functionality, such as adding middleware or event listeners.
    * @param app - The Zoltra instance to configure.
    * @returns A promise that resolves when installation is complete, or void for synchronous installation.
    * @example
    * const plugin: Plugin = {
    *   name: "my-plugin",
    *   install: (app) => {
-   *     app.addMiddleware(async (req, res, next) => { res.setHeader("X-Plugin", "MyPlugin"); next(); });
+   *     app.addMiddleware(async (req, res, next) => {
+   *       // .. your middleware logic .. //
+   *      next();
+   *  });
    *   }
    * };
    */

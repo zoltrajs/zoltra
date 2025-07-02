@@ -1,14 +1,39 @@
-import http from "http";
 import { EventArgs, EventNames, RequestRes, ZoltraHandler } from "./core";
 import { ErrorHandler, Plugin } from "./plugin";
 import { IncomingMessage, ServerResponse } from "http";
+import { Route } from "./route";
 
 export interface AppInterface {
+  /**
+   * Holds the current list of registered routes. This array is
+   * populated when routes are loaded during startup or dynamically
+   * in serverless environments.
+   */
+  _routes: Route[];
+
+  /**
+   * Registers an event listener on the framework's internal event bus.
+   * Useful for hooking into lifecycle events like request, response,
+   * or custom events defined by plugins.
+   *
+   * @typeParam CustomEvents - Custom event string names
+   * @param eventName - The name of the event to listen for
+   * @param listener - The callback to invoke when the event is emitted
+   */
   on<CustomEvents extends string = never>(
     eventName: EventNames<CustomEvents>,
     listener: (...args: EventArgs<CustomEvents>) => void
   ): void;
 
+  /**
+   * Emits an event on the framework's internal event bus,
+   * notifying any registered listeners. This can be used to
+   * trigger hooks or side effects during the app lifecycle.
+   *
+   * @typeParam CustomEvents - Custom event string names
+   * @param eventName - The name of the event to emit
+   * @param args - Arguments to pass to the event listeners
+   */
   emit<CustomEvents extends string = never>(
     eventName: EventNames<CustomEvents>,
     ...args: EventArgs<CustomEvents>
@@ -19,7 +44,9 @@ export interface AppInterface {
    * @param middleware - The middleware function to add.
    * @returns A result object for chaining or further configuration.
    * @example
-   * zoltra.addMiddleware(async (req, res, next) => { res.setHeader("X-Powered-By", "Zoltra"); next(); });
+   * zoltra.addMiddleware(async (req, res, next) => {
+   *   // Your Function
+   * });
    */
   addMiddleware(middleware: ZoltraHandler): RequestRes;
 
@@ -40,11 +67,39 @@ export interface AppInterface {
   home(handler: ZoltraHandler): void;
 
   /**
-   * Core request handler for processing incoming requests.
+   * Returns a serverless-compatible request handler function.
+   *
+   * The returned function can be directly exported as a default serverless handler.
+   * @returns A request handler function compatible with serverless frameworks
    */
-  handler(req: IncomingMessage, res: ServerResponse): Promise<void>;
+  exportHandler(): (req: IncomingMessage, res: ServerResponse) => Promise<void>;
 
-  loadRoutes(): Promise<void>;
+  /**
+   * Initializes the framework in a serverless environment by
+   * loading necessary plugins, routes, and other setup code
+   * without starting a full HTTP server.
+   *
+   * This method is only used for **serverless** deployments.
+   */
+  loadInit(): void;
+
+  /**
+   * Loads a pre-defined static array of routes.
+   *
+   * This method is **only intended for serverless environments** such as Vercel,
+   * where dynamic file-based route scanning is not possible due to build-time
+   * packaging limitations. Instead of scanning the filesystem, pass your
+   * generated static route registry here.
+   *
+   * @param routes - An array of Route objects to register with the application.
+   *
+   * @example
+   * import userRoutes from "../routes/user";
+   * const routes = [...withPrefix("user", userRoutes)]
+   *
+   * app.loadStaticRoutes(routes);
+   */
+  loadStaticRoutes(routes: Route[]): void;
 
   /**
    * Starts the Zoltra server, listening on the configured port.
@@ -85,8 +140,6 @@ export interface AppInterface {
    */
   stop(): Promise<void>;
 
-  /* ========== Deprecated methods ======= */
-
   /**
    * Registers a plugin to extend Zoltra functionality.
    * @param plugin - The plugin to register.
@@ -112,11 +165,42 @@ export interface AppInterface {
 }
 
 export interface LoggerInterface {
+  /**
+   * Logs a debug-level message. Useful for development and verbose output.
+   *
+   * @param message - The message to log
+   * @param data - Optional additional context data to include in the log
+   */
   debug(message: string, data?: Record<string, unknown>): void;
+
+  /**
+   * Logs an informational message. Use for standard runtime messages
+   * that describe the normal operation of the application.
+   *
+   * @param message - The message to log
+   * @param data - Optional additional context data to include in the log
+   */
   info(message: string, data?: Record<string, unknown>): void;
+
+  /**
+   * Logs a warning message. Indicates something unexpected but not
+   * necessarily an error or failure.
+   *
+   * @param message - The message to log
+   * @param data - Optional additional context data to include in the log
+   */
   warn(message: string, data?: Record<string, unknown>): void;
+
+  /**
+   * Logs an error message. Should be used when something has failed.
+   *
+   * @param message - The message to log
+   * @param error - Optional Error object containing stack trace or details
+   * @param data - Optional additional context data to include in the log
+   */
   error(message: string, error?: Error, data?: Record<string, unknown>): void;
-  trackRequest(req: http.IncomingMessage): {
+
+  trackRequest(req: IncomingMessage): {
     end: (res: { statusCode: number }) => void;
   };
 }

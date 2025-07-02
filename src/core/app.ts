@@ -11,6 +11,7 @@ import {
   EventArgs,
   EventNames,
   RequestRes,
+  Route,
   StaticOptions,
   ZoltraConfig,
   ZoltraHandler,
@@ -41,6 +42,7 @@ class Zoltra implements AppInterface {
   private _plugins: Record<string, _Plugin>;
   private protocol: "https" | "http" = "http";
   config: ZoltraConfig | null = null;
+  _routes: Route[] = [];
 
   /**
    * Creates a new Zoltra instance.
@@ -167,9 +169,11 @@ class Zoltra implements AppInterface {
     }
   }
 
-  public async loadRoutes() {
+  public loadStaticRoutes(routes: Route[]) {
     if (!this.routeHandler._hasLoadedRoutes) {
-      this.routeHandler.loadRoutes();
+      this._setupDefaultHomeRoute();
+      this.routeHandler.loadStaticRoutes(routes);
+      this._routes = this.routeHandler.routes;
     } else {
       this.logger.warn("Routes has already been loaded");
     }
@@ -177,8 +181,9 @@ class Zoltra implements AppInterface {
 
   /**
    * Core request handler for processing incoming requests.
+   * @internal
    */
-  public async handler(req: IncomingMessage, res: ServerResponse) {
+  private async handler(req: IncomingMessage, res: ServerResponse) {
     res.setHeader("X-Powered-By", "Zoltra");
 
     const next = async (error?: Error | any) => {
@@ -216,7 +221,7 @@ class Zoltra implements AppInterface {
 
       await runMiddleware(0);
     } catch (error) {
-      this.handleError(error, req, res);
+      this.handleError(error, req, res, false);
     }
   }
 
@@ -275,13 +280,16 @@ class Zoltra implements AppInterface {
   private handleError(
     error: unknown,
     req: IncomingMessage,
-    res: ServerResponse
+    res: ServerResponse,
+    _emitErr: boolean = true
   ) {
     // Normalize error to ensure it's an Error instance
     const err = error instanceof Error ? error : new Error(String(error));
 
     // Emit the "error" event for plugins to handle
-    this.emit("error", err, req, res, this.logger);
+    if (_emitErr) {
+      this.emit("error", err, req, res, this.logger);
+    }
 
     // Delegate to defaultErrorHandler for default behavior
     this.defaultErrorHandler(err, req, res);
@@ -335,25 +343,49 @@ class Zoltra implements AppInterface {
   private enhanceRequest(_: http.IncomingMessage) {}
 
   public async start(maxAttempts = 5) {
+    if (process.env.IS_SERVERLESS) {
+      // do nothing — let exportHandler handle serverless
+      return;
+    }
     const config = await importConfig(this.logger);
     this.config = config;
     this._plugins = await loadPluginsAsync(this, config);
     await this.initializePlugins();
     this._setupDefaultHomeRoute();
     await this.routeHandler.loadRoutes();
+    this._routes = this.routeHandler.routes;
 
     let port = config.PORT;
     this.protocol = "http";
     this._tryStartServer(port, config, maxAttempts);
   }
 
+  public exportHandler() {
+    return (req: IncomingMessage, res: ServerResponse) => {
+      // if (req.url?.startsWith("/api")) {
+      //   req.url = req.url.replace(/^\/api/, "") || "/";
+      // }
+
+      return this.handler(req, res);
+    };
+  }
+
+  public async loadInit() {
+    await this.initializePlugins();
+  }
+
   public async startHttps(key: string, cert: string, maxAttempts = 5) {
+    if (process.env.IS_SERVERLESS) {
+      // do nothing — let exportHandler handle serverless
+      return;
+    }
     const config = await importConfig(this.logger);
     this.config = config;
     this._plugins = await loadPluginsAsync(this, config);
     await this.initializePlugins();
     this._setupDefaultHomeRoute();
     await this.routeHandler.loadRoutes();
+    this._routes = this.routeHandler.routes;
 
     let port = config.PORT;
     const serverConfig = new ServerConfig(this.logger);

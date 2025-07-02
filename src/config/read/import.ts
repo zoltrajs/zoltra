@@ -1,3 +1,4 @@
+import { checkEnv } from "core/constants";
 import { config as DefaultConfig } from "..";
 import { existsSync } from "fs";
 import path from "path";
@@ -6,13 +7,12 @@ import { LoggerInterface, ZoltraConfig } from "zoltra/types";
 const importConfig = async (logger: LoggerInterface): Promise<ZoltraConfig> => {
   try {
     const isTypeScript = existsSync(path.join(process.cwd(), "tsconfig.json"));
-    const DEPLOYMENT_ENV = process.env.DEPLOYMENT_ENV;
-    const NODE_ENV = process.env.NODE_ENV;
+    const { IS_SERVERLESS, IS_PROD } = checkEnv();
 
     let config: ZoltraConfig | null = null;
     let configFileNotFoundLogged = false;
 
-    if (NODE_ENV === "production" && DEPLOYMENT_ENV === "VERCEL") {
+    if (IS_PROD && IS_SERVERLESS) {
       logger.info("[INFO] Running in Vercel production environment.");
       // Always try to load from project root
       const configPath = path.join(process.cwd(), "zoltra.config.js");

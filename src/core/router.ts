@@ -11,6 +11,7 @@ import {
   ZoltraResponse,
 } from "../types";
 import { pathToFileURL, parse } from "url";
+import { checkEnv } from "./constants";
 
 export class Router {
   routes: Route[] = [];
@@ -56,6 +57,21 @@ export class Router {
     } catch (error) {
       this.logger.error("Failed to load routes", error as Error);
       throw error;
+    }
+  }
+
+  public loadStaticRoutes(routes: Route[]) {
+    const { IS_SERVERLESS, IS_PROD } = checkEnv();
+    if (IS_PROD && IS_SERVERLESS) {
+      this.routes = routes;
+
+      if (this._homeRoute) {
+        this.routes.unshift(this._homeRoute);
+      }
+
+      this._hasLoadedRoutes = true;
+    } else {
+      this.logger.warn("Cannot load static routes in non-serverless mode");
     }
   }
 
@@ -147,19 +163,13 @@ export class Router {
   }
 
   public getRoutesDirectory() {
-    const DEPLOYMENT_ENV = process.env.DEPLOYMENT_ENV;
-    const NODE_ENV = process.env.NODE_ENV;
-    const isVercelProduction =
-      NODE_ENV === "production" && DEPLOYMENT_ENV === "VERCEL";
+    const { IS_PROD, IS_SERVERLESS } = checkEnv();
+    const isServerLess = IS_PROD && IS_SERVERLESS;
     const isTypeScript = existsSync(path.join(process.cwd(), "tsconfig.json"));
+
     let routesDir = path.join(process.cwd(), "routes");
 
-    // Handle compiled JavaScript in dist directory
-    if (isVercelProduction) {
-      this.logger.info("[INFO] Running in Vercel production environment.");
-      // Always read from root
-      routesDir = path.join(process.cwd(), "routes");
-    } else if (isTypeScript && !isVercelProduction) {
+    if (!isServerLess && isTypeScript) {
       routesDir = path.join(process.cwd(), "dist/routes");
     }
 
@@ -178,18 +188,13 @@ export class Router {
       const url = new URL(req.url || "", `${protocol}://${req.headers.host}`);
       const path = url.pathname;
       const method = req.method || "GET";
-      console.log(
-        `[INFO] Starting request handling with protocol: ${protocol} and method: ${method} for path: ${path}`
-      );
-
-      this.logger.debug(`Processing ${method} ${path}`);
 
       const route = this.findMatchingRoute(path, method, req);
 
       if (!route) {
         this.logger.debug("No route found, sending 404");
         return res
-          .status(400)
+          .status(404)
           .json({ error: "Route Not Found", success: false });
       }
 
