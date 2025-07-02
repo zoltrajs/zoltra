@@ -1,7 +1,7 @@
 {
   "name": "zoltra",
-  "version": "0.1.0-alpha.2.0.1",
-  "description": "A lightweight and intuitive web server framework",
+  "version": "0.1.0-alpha.3",
+  "description": "A lightweight and intuitive nodejs web server framework",
   "main": "dist/index.cjs",
   "module": "dist/index.js",
   "types": "dist/index.d.ts",

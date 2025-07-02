@@ -12,5 +12,3 @@ export const config: ZoltraConfig = {
 };
 
 export const zoltraConfig = (config: ZoltraConfig) => config;
-
-export * from "./manager";

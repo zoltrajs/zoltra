@@ -3,11 +3,7 @@
 import { Command } from "commander";
 import { Logger } from "zoltra";
 import { startTsWatcher } from "./ts/watch.js";
-import { getPackageOpts, readConfig } from "../common.js";
 import { startJsWatcher } from "./js/watch.js";
-import { turboClient } from "./ts/turbo-client/hc.js";
-
-const config = getPackageOpts();
 
 const program = new Command();
 
@@ -26,12 +22,8 @@ program
   .option("-t, --typescript", "Start TypeScript watcher")
   .option("-j, --javascript", "Start JavaScript watcher")
   .action((options) => {
-    const config = readConfig();
-    const hc = config.experimental?.dev?.turboClient;
     if (options.typescript) {
-      if (hc) {
-        turboClient.startWatch();
-      } else startTsWatcher(options.server);
+      startTsWatcher(options.server);
     } else if (options.javascript) {
       startJsWatcher(options.server);
     } else {

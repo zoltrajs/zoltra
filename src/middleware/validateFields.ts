@@ -11,9 +11,10 @@ import { ZoltraHandler } from "../types";
  * @returns {Function} A middleware function for validating required fields in the request body.
  *
  * @example
+ * // routes/auth.ts
  * export const routes = defineRoutes([
  *  {
-      path: "/v1/auth/sign-up",
+      path: "/sign-up",
       method: "POST",
       handler: registerUser,
       middleware: [
@@ -38,7 +39,7 @@ const validateFields =
     });
 
     if (missingFields.length > 0) {
-      return res.status(403).json({
+      return res.status(400).json({
         message: "Validation Error",
         error: `The following fields are required: ${missingFields.join(", ")}`,
       });
