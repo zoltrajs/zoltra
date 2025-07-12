@@ -19,10 +19,15 @@ export class Logger implements LoggerInterface {
   private config: ZoltraConfig;
   private blockLog?: boolean;
 
-  constructor(context?: string, req?: IncomingMessage, blockLog?: boolean) {
+  constructor(
+    context?: string,
+    req?: IncomingMessage,
+    blockLog?: boolean,
+    logReadConfig?: boolean
+  ) {
     this.context = context || "Application";
     this.request = req;
-    this.config = readConfig();
+    this.config = readConfig(logReadConfig);
     this.blockLog = blockLog;
   }
 

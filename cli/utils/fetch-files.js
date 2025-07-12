@@ -13,7 +13,7 @@ const config = JSON.parse(
 
 const Spinner = ora();
 
-const logger = new Logger("FileFetcher");
+const logger = new Logger("FileFetcher", undefined, false, true);
 
 export const fetchFiles = async () => {
   const fetchRecursive = async (obj) => {

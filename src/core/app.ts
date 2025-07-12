@@ -362,10 +362,6 @@ class Zoltra implements AppInterface {
 
   public exportHandler() {
     return (req: IncomingMessage, res: ServerResponse) => {
-      // if (req.url?.startsWith("/api")) {
-      //   req.url = req.url.replace(/^\/api/, "") || "/";
-      // }
-
       return this.handler(req, res);
     };
   }

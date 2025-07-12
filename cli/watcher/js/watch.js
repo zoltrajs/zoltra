@@ -12,7 +12,7 @@ import { delay } from "@zoltra-toolkit/node";
 import { readdirSync } from "fs";
 import { join } from "path";
 
-const logger = new Logger("ZoltraDev");
+const logger = new Logger("ZoltraDev", undefined, false, true);
 
 let serverProcess = null;
 
