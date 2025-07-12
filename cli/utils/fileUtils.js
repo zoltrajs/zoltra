@@ -5,7 +5,7 @@ import { writeFile, mkdir } from "fs/promises";
 
 export const folders = ["controllers", "routes", "plugins"];
 
-const logger = new Logger("CLI/FileUtils");
+const logger = new Logger("CLI/FileUtils", undefined, false, true);
 const cwd = process.cwd();
 
 export const replaceInCode = (code, search, replacement) => {

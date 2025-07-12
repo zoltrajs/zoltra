@@ -13,7 +13,7 @@ const config = getPackageOpts();
 
 const program = new Command();
 
-const logger = new Logger("CLI");
+const logger = new Logger("CLI", undefined, false, true);
 
 program
   .name("zoltrajs")

@@ -6,7 +6,7 @@ import ora from "ora";
 import { getPackageOpts } from "../common.js";
 import { updateZdeps } from "../utils/z-deps.js";
 
-const logger = new Logger("UpdateCommand");
+const logger = new Logger("UpdateCommand", undefined, false, true);
 
 export const updateBatch = () => {
   const projectDir = process.cwd();

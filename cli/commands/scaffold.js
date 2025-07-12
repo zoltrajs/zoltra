@@ -13,7 +13,7 @@ import { installPkg } from "../utils/deps.js";
 
 export const createApp = async (appName, options) => {
   const { git, typescript, javascript } = options;
-  const logger = new Logger("CLI/Zoltra-Create");
+  const logger = new Logger("CLI/Zoltra-Create", undefined, false, true);
 
   if (typescript === undefined && javascript === undefined) {
     console.log(
