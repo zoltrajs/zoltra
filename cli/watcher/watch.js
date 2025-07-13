@@ -7,7 +7,7 @@ import { startJsWatcher } from "./js/watch.js";
 
 const program = new Command();
 
-const logger = new Logger("CLI");
+const logger = new Logger("CLI", undefined, false, true);
 
 program
   .name("zoltra-watch")

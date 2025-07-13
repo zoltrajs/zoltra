@@ -2,7 +2,7 @@ import { clearTerminal } from "../common.js";
 import { execSync } from "child_process";
 import { Logger } from "zoltra";
 
-const logger = new Logger("DevCLI");
+const logger = new Logger("DevCLI", undefined, false, true);
 
 export const runDev = () => {
   try {

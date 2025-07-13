@@ -4,7 +4,7 @@ import path from "path";
 import { config as DefaultConfig } from "../index";
 import { checkEnv } from "core/constants";
 
-export const readConfig = (): ZoltraConfig => {
+export const readConfig = (logWarning: boolean = true): ZoltraConfig => {
   try {
     const { IS_SERVERLESS, IS_PROD } = checkEnv();
     const isServerLess = IS_PROD && IS_SERVERLESS;
@@ -31,14 +31,16 @@ export const readConfig = (): ZoltraConfig => {
     }
   } catch (error) {
     const err = error as Error;
-    console.error(
-      `[ERROR] Failed to read config — using default. ${err.message}`
-    );
+    if (logWarning) {
+      console.warn(
+        `[WARN] Failed to read config - using default using default: ${err.message}`
+      );
+    }
     return DefaultConfig;
   }
 };
 
-const readRawConfig = (filePath: string) => {
+const readRawConfig = (filePath: string, logWarning: boolean = true) => {
   const content = readFileSync(filePath, "utf-8");
 
   // Remove all comments and imports, then parse
@@ -57,7 +59,9 @@ const readRawConfig = (filePath: string) => {
     const configObj: ZoltraConfig = new Function(`return ${match}`)();
     return { ...configObj };
   } else {
-    console.warn(`[WARN] Invalid config format in ${filePath}`);
+    if (logWarning) {
+      console.warn(`[WARN] Invalid config format in ${filePath}`);
+    }
     return DefaultConfig;
   }
 };

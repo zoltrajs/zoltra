@@ -5,7 +5,7 @@ import { getPackageOpts } from "../common.js";
 
 const { publishConfig } = getPackageOpts();
 
-const logger = new Logger("InstallCommand");
+const logger = new Logger("InstallCommand", undefined, false, true);
 
 /**
  * Installs dependencies and runs the update-deps CLI command to update them
