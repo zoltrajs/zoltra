@@ -43,7 +43,7 @@ class Request {
   //       console.log("[DEBUG] About to handle route:", req.method, req.url);
   //       await this.router.handle(req, res, next);
   //       console.log("[DEBUG] Finished handling route");
-  //     } catch (error) {
+  //     } catch (error) { 
   //       const err = error as Error;
   //       this.logger.error("[DEBUG] ERROR in route handler", { ...err });
   //       console.log("[DEBUG] ERROR in route handler:", error);
