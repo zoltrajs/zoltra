@@ -1,11 +1,14 @@
 {
   "name": "zoltra",
-  "version": "0.1.0",
+  "version": "0.1.0-next.1",
   "description": "A fast, file-based JavaScript web server framework",
   "type": "module",
   "main": "./dist/index.js",
   "module": "./dist/index.js",
   "types": "./dist/index.d.ts",
+  "publishConfig": {
+    "tag": "next"
+  },
   "exports": {
     ".": {
       "import": "./dist/index.js",
@@ -30,13 +33,25 @@
   "bugs": {
     "url": "https://github.com/zoltrajs/zoltra/issues"
   },
+  "scripts": {
+    "build:cjs": "tsc -p tsconfig.cjs.json",
+    "build:esm": "tsc -p tsconfig.esm.json",
+    "build": "tsup",
+    "fix:esm": "node scripts/fix-esm.js",
+    "publish:next": "npm publish --provenance=false --access public --tag next",
+    "publish:rc": "npm publish --provenance=false --access public --tag rc",
+    "publish": "npm publish --provenance=false --access public --tag latest"
+  },
   "devDependencies": {
+    "@types/mime-types": "^3.0.1",
     "@types/node": "^24.3.0",
+    "tsup": "^8.5.0",
     "typescript": "^5.9.2"
   },
   "dependencies": {
     "@zoltra/cli-builder": "^0.1.1",
-    "chokidar": "^4.0.3"
+    "chokidar": "^4.0.3",
+    "mime-types": "^3.0.1"
   },
   "bin": {
     "zoltra": "./dist/cli/index.js"

@@ -1,16 +1,17 @@
 #!/usr/bin/env node
 
 import { createCLI } from "@zoltra/cli-builder";
-import { findEntryPoint, getPackageOption } from "./shared";
+import { findEntryPoint, getPackageOption } from "./shared/index";
 import { start } from "./commands/start";
 import { startDevServer } from "./commands/dev";
+import { startTsDevServer } from "./commands/dev-ts";
 
 const packageJson = getPackageOption();
 
 const cli = createCLI(
   "Zoltra",
   packageJson.version,
-  "The official CLI for ZoltraJS - A minimalist, plugin-first Node.js framework"
+  "The official CLI for Zoltra - A fast, file-based JavaScript web server framework"
 );
 
 cli
@@ -32,7 +33,8 @@ cli
     "Start the Zoltra application in TypeScript development mode"
   )
   .action(() => {
-    console.log("Starting TypeScript development server...");
+    const entryPoint = findEntryPoint();
+    startTsDevServer(entryPoint);
   })
   .finalize();
 

@@ -1,5 +1,5 @@
 import { execSync } from "child_process";
-import { findEntryPoint } from "../shared";
+import { findEntryPoint } from "../shared/index";
 
 export const start = () => {
   try {

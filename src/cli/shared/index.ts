@@ -14,6 +14,8 @@ export const getPackageOption = () => {
 };
 
 export const findEntryPoint = () => {
-  const packageDotJson = getPackageOption();
+  const packageDotJson = JSON.parse(
+    readFileSync(path.join(process.cwd(), "package.json"), "utf-8")
+  );
   return packageDotJson.main || "app.js";
 };
