@@ -1,28 +1,40 @@
 # Changelog
 
-## [0.1.0-next.1] - 2025-03-09
+All notable changes to this project will be documented in this file.
+
+## [0.1.0-next.1] - 2025-09-03
+
+### Overview
+
+This release captures the initial, foundational implementation of the Zoltra framework new architecture. It provides a minimal but complete set of building blocks for creating HTTP applications: routing, middleware, plugin lifecycle, dependency injection, CLI tooling, and basic testing utilities.
 
 ### Added
 
-- Initial implementation of Zoltra web framework core architecture.
-- File-based routing system with automatic route discovery ([src/lib/core/router.ts](src/lib/core/router.ts)).
-- Static file serving middleware and file server utility ([src/lib/middleware/static-middleware.ts](src/lib/middleware/static-middleware.ts), [src/lib/utils/file-server.ts](src/lib/utils/file-server.ts)).
-- Middleware stack with support for global and route-specific middleware ([src/lib/middleware/stack.ts](src/lib/middleware/stack.ts)).
-- Built-in middleware: CORS ([src/lib/middleware/cors.ts](src/lib/middleware/cors.ts)), JSON parser ([src/lib/middleware/json-parser.ts](src/lib/middleware/json-parser.ts)), error logger ([src/lib/utils/error-logger.ts](src/lib/utils/error-logger.ts)), and request logger ([src/lib/utils/request-logger.ts](src/lib/utils/request-logger.ts)).
-- Plugin system with lifecycle hooks ([src/lib/plugins/manger.ts](src/lib/plugins/manger.ts)).
-- Dependency injection container ([src/lib/di/container.ts](src/lib/di/container.ts)).
-- Environment variable manager ([src/lib/utils/env.ts](src/lib/utils/env.ts)).
-- Logger utility ([src/lib/utils/logger.ts](src/lib/utils/logger.ts)).
-- CLI with commands for starting and developing applications ([src/cli/index.ts](src/cli/index.ts), [src/cli/commands/start.ts](src/cli/commands/start.ts), [src/cli/commands/dev.ts](src/cli/commands/dev.ts), [src/cli/commands/dev-ts.ts](src/cli/commands/dev-ts.ts)).
-- Testing utilities: assertion, HTTP client, and test runner ([src/lib/testing/assert.ts](src/lib/testing/assert.ts), [src/lib/testing/http-client.ts](src/lib/testing/http-client.ts), [src/lib/testing/runner.ts](src/lib/testing/runner.ts)).
-- Type definitions for core, middleware, plugins, router, testing, and utilities ([src/types/](src/types/)).
+- Core application bootstrap and context management ([src/lib/core/app.ts](src/lib/core/app.ts), [src/lib/core/context.ts](src/lib/core/context.ts)).
+- File-based router with automatic route discovery and helper utilities ([src/lib/core/router.ts](src/lib/core/router.ts)).
+- Middleware stack abstraction supporting global and route-level middleware ([src/lib/middleware/stack.ts](src/lib/middleware/stack.ts)).
+- Built-in middleware implementations:
+  - CORS handler ([src/lib/middleware/cors.ts](src/lib/middleware/cors.ts)).
+  - JSON body parser ([src/lib/middleware/json-parser.ts](src/lib/middleware/json-parser.ts)).
+  - Static file serving middleware and low-level file server utility ([src/lib/middleware/static-middleware.ts](src/lib/middleware/static-middleware.ts), [src/lib/utils/file-server.ts](src/lib/utils/file-server.ts)).
+- Plugin manager with lifecycle hooks (register, init, teardown) ([src/lib/plugins/manger.ts](src/lib/plugins/manger.ts)).
+- Lightweight dependency injection container for wiring services ([src/lib/di/container.ts](src/lib/di/container.ts)).
+- CLI utilities and commands to run and develop apps locally ([src/cli/index.ts](src/cli/index.ts), [src/cli/commands/\*.ts](src/cli/commands/)).
+- Developer-friendly utilities: environment loader, structured logger, request/error loggers ([src/lib/utils/\*.ts](src/lib/utils/*.ts)).
+- Basic testing helpers: assertion helpers, HTTP test client, and a test runner ([src/lib/testing/\*.ts](src/lib/testing/*.ts)).
+- Type definitions for core concepts, middleware, plugins, router and tests (`src/types/`).
 
-### Changed
+### Why this matters
 
-- N/A (Initial release)
+- Routing and middleware provide a familiar, composable surface for building HTTP handlers.
+- Plugins and DI enable extension and inversion of control for apps and libraries built on top of Zoltra.
+- CLI and testing utilities reduce friction for iteration and automated checks.
 
-### Fixed
+### Usage notes
 
-- N/A (Initial release)
+- This is the initial release — APIs are subject to change.
 
----
+### Known limitations
+
+- No backward-compatibility guarantees yet. Expect API churn as the project stabilizes.
+- Edge cases around streaming request bodies and advanced content-negotiation are not fully implemented.
