@@ -74,7 +74,7 @@ export class Router implements IRouter {
       this.routes.set(method + ":" + path, route);
     }
 
-    // ✅ Precompiled middleware chain
+    // Precompiled middleware chain
     const stack = [...this.globalMiddlewares, ...middlewares, handler];
     route.middlewareChain = this.buildMiddlewareChain(stack);
   }
@@ -155,10 +155,10 @@ export class Router implements IRouter {
         file.isFile() &&
         (file.name.endsWith(".ts") || file.name.endsWith(".js"))
       ) {
-        // ✅ Build route path from file path
+        // Build route path from file path
         const routePath = this._filePathToRoutePath(relativePath);
 
-        // ✅ Dynamic import only once (at startup)
+        // Dynamic import
         const absolutePath = resolve(fullPath);
         const fileUrl = new URL(`file:///${absolutePath.replace(/\\/g, "/")}`)
           .href;
@@ -170,7 +170,7 @@ export class Router implements IRouter {
         const middlewares = module.middlewares || [];
 
         if (typeof handler === "function") {
-          // ✅ Register GET by default, or expose more if needed
+          // Register GET by default
           this.addRoute("GET", routePath, handler, middlewares);
         } else if (
           module.GET ||
