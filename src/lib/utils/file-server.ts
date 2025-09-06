@@ -60,9 +60,6 @@ export class FileServer {
     try {
       const fullPath = join(this.root, filePath);
 
-      console.log("fullPath:", fullPath);
-      console.log("root:", this.root);
-
       // Security check - prevent directory traversal
       if (!this._isPathSafe(fullPath)) {
         context.status(403).json({ error: "Access denied" });
@@ -109,6 +106,11 @@ export class FileServer {
 
     if (this.options.directoryListing) {
       this._serveDirectoryListing(context, fullPath, requestPath);
+      return;
+    }
+
+    // For root path, don't send 404 - let it fall through to routes
+    if (requestPath === "/" || requestPath === "") {
       return;
     }
 
@@ -285,6 +287,10 @@ export class FileServer {
    * Get MIME type for file extension
    */
   getMimeType(ext: string): string {
-    return this.mimeTypes[ext.toLowerCase()] || "application/octet-stream";
+    return (
+      mime.lookup(ext) ||
+      this.mimeTypes[ext.toLowerCase()] ||
+      "application/octet-stream"
+    );
   }
 }

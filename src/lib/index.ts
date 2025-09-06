@@ -7,3 +7,5 @@ export { Assert } from "./testing/assert";
 export { HTTPClient } from "./testing/http-client";
 export { TestRunner } from "./testing/runner";
 export * from "./plugins/index";
+export * from "./middleware/index";
+export { Logger } from "./utils/logger";

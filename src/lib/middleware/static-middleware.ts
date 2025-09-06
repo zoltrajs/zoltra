@@ -22,11 +22,10 @@ export class Static {
 
     // Only try to serve static files, not API routes
     if (this._shouldServeStaticFile(context.path)) {
-      console.log("context.path:", context.path);
       // Try to serve the file
       await this.fileServer.serveFile(context, context.path);
 
-      // If file was served, don't call next()
+      // If file was served successfully, don't call next()
       if (context.sent) {
         return;
       }

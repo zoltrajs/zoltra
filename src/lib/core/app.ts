@@ -64,6 +64,7 @@ export class Application implements IApplication {
       level: this.options.logLevel,
       timestamp: true,
       colors: true,
+      context: "App",
     });
 
     // Server state
@@ -120,26 +121,30 @@ export class Application implements IApplication {
     return this;
   }
 
-  // TODO: Add route specific middleware
-  route(method: string, path: string, handler: Handler): this {
-    this.router.addRoute(method, path, handler);
+  private _route(
+    method: string,
+    path: string,
+    handler: Handler,
+    middleware?: RequestHandler[]
+  ): this {
+    this.router.addRoute(method, path, handler, middleware);
     return this;
   }
 
-  get(path: string, handler: Handler): this {
-    return this.route("GET", path, handler);
+  get(path: string, handler: Handler, middleware?: RequestHandler[]): this {
+    return this._route("GET", path, handler, middleware);
   }
 
-  post(path: string, handler: Handler): this {
-    return this.route("POST", path, handler);
+  post(path: string, handler: Handler, middleware?: RequestHandler[]): this {
+    return this._route("POST", path, handler, middleware);
   }
 
-  put(path: string, handler: Handler): this {
-    return this.route("PUT", path, handler);
+  put(path: string, handler: Handler, middleware?: RequestHandler[]): this {
+    return this._route("PUT", path, handler, middleware);
   }
 
-  delete(path: string, handler: Handler): this {
-    return this.route("DELETE", path, handler);
+  delete(path: string, handler: Handler, middleware?: RequestHandler[]): this {
+    return this._route("DELETE", path, handler, middleware);
   }
 
   service(
@@ -156,45 +161,13 @@ export class Application implements IApplication {
     return this;
   }
 
-  async handleRequest(req: any, res: any): Promise<void> {
-    const startTime = process.hrtime.bigint();
+  async handler(req: any, res: any): Promise<void> {
     const context = new Context(req, res, this);
 
     try {
       await this.middleware.execute(context);
 
-      const matched = await this.router.match(context);
-      if (!matched) {
-        this.logger.warn(`Route not found: ${context.method} ${context.path}`, {
-          method: context.method,
-          path: context.path,
-          ip: req.socket.remoteAddress,
-        });
-        context.status(404).json({
-          error: "Not Found",
-          message: `Route ${context.method} ${context.path} not found`,
-        });
-        return;
-      }
-
-      if (matched.params) {
-        context.params = { ...context.params, ...matched.params };
-      }
-
-      await matched.handler(context);
-
-      const endTime = process.hrtime.bigint();
-      const responseTime = Number(endTime - startTime) / 1_000_000;
-
-      this.logger.debug(
-        `Request completed: ${context.method} ${context.path}`,
-        {
-          method: context.method,
-          path: context.path,
-          status: context.statusCode,
-          responseTime: `${responseTime.toFixed(2)}ms`,
-        }
-      );
+      await this.router.handle(context);
     } catch (err: any) {
       this.errors.push({
         timestamp: new Date(),
@@ -233,7 +206,7 @@ export class Application implements IApplication {
       throw new Error("Server is already running");
     }
 
-    this.server = createServer(this.handleRequest.bind(this));
+    this.server = createServer(this.handler.bind(this));
 
     const maxAttempts = this.options.autoIncrementPort
       ? this.options.maxPortAttempts!
@@ -247,11 +220,7 @@ export class Application implements IApplication {
         this.actualPort = currentPort;
         this.isListening = true;
 
-        this.logger.info(`🚀 Server running on http://${host}:${currentPort}`, {
-          port: currentPort,
-          host,
-          attempts: attempt + 1,
-        });
+        this.logger.info(`🚀 Server running on http://${host}:${currentPort}`);
 
         if (callback) callback(currentPort);
 

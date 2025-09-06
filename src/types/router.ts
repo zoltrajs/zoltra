@@ -32,4 +32,6 @@ export interface IRouter {
   match(context: IContext): Promise<MatchResult | null>;
 
   getRoutes(): { static: string[]; file: string[] };
+
+  handle(context: IContext): Promise<void>;
 }

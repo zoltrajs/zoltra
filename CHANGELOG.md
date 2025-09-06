@@ -2,6 +2,37 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.1.0-next.2] - 2025-09-06
+
+### Added
+
+- **Enhanced logging system**: Complete refactor of [`Logger`](src/lib/utils/logger.ts) class with colored console output, request tracking, and context support
+- **Color utilities**: New [`colorText`](src/lib/utils/color.ts) utility for terminal color formatting
+- **Route-specific middleware**: Added support for middleware arrays on individual routes in [`IApplication`](src/types/core.ts) interface
+- **Middleware utilities**: New [`defineMiddlewares`](src/lib/middleware/index.ts) helper function for middleware composition
+- **Type safety improvements**: Added `Registry` namespace for service name typing and better service resolution
+
+### Enhanced
+
+- **Static file serving**: Improved [`FileServer`](src/lib/utils/file-server.ts) with better root path handling and enhanced MIME type detection using mime library
+- **Development tools**: Enhanced dev servers with improved logging using the new Logger class and added node_modules to ignored files
+- **Request logging**: Simplified [`RequestLogger`](src/lib/utils/request-logger.ts) to use new logger tracking system
+- **Router interface**: Added `handle` method to [`IRouter`](src/types/router.ts) interface
+- **API documentation**: Added `app.handler(req, res)` method documentation to README
+
+### Fixed
+
+- Removed debug console.log statements from static middleware
+- Better handling of root path requests (no longer sends 404 for root)
+- Cleaned up tsconfig.json formatting
+
+### Changed
+
+- **Breaking**: Renamed `handleRequest` to `handler` in [`IApplication`](src/types/core.ts) interface
+- Version bumped to 0.1.0-next.2
+- Logger now supports colored status codes and better request tracking
+- Development servers now use structured logging instead of console.log
+
 ## [0.1.0-next.1] - 2025-09-03
 
 ### Overview

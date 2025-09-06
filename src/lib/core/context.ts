@@ -1,13 +1,7 @@
 import { IncomingMessage, ServerResponse } from "http";
 import { parse as parseQuery, ParsedUrlQuery } from "querystring";
 import { parse as parseUrl, UrlWithStringQuery } from "url";
-import { IApplication, IContainer, IContext } from "../../types";
-
-export interface ContextOptions {
-  req: IncomingMessage;
-  res: ServerResponse;
-  app: IApplication;
-}
+import { IApplication, IContainer, IContext, Registry } from "../../types";
 
 export class Context implements IContext {
   req: IncomingMessage;
@@ -153,7 +147,7 @@ export class Context implements IContext {
     return this._rawBody;
   }
 
-  service<T = any>(name: string): T {
+  service<T = any>(name: Registry.__services["name"]): T {
     return this.services.resolve<T>(name);
   }
 

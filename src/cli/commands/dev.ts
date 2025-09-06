@@ -1,16 +1,19 @@
 import { ChildProcess, spawn } from "child_process";
 import chokidar from "chokidar";
 import path from "path";
+import { Logger } from "../../lib";
 
 let serverProcess: ChildProcess | null = null;
 let restartTimer: NodeJS.Timeout | null = null;
+
+const logger = new Logger({ context: "Dev-Server" });
 
 /**
  * Start or restart the Express server
  */
 function startServer(entryPath: string) {
   if (serverProcess) {
-    console.log("♻️  Restarting server...");
+    logger.info("♻️  Restarting server...");
     serverProcess.kill("SIGTERM");
   }
 
@@ -21,7 +24,7 @@ function startServer(entryPath: string) {
 
   serverProcess.on("exit", (code, signal) => {
     if (signal !== "SIGTERM") {
-      console.log(`⚠️  Server exited with code ${code}`);
+      logger.info(`⚠️  Server exited with code ${code}`);
     }
   });
 }
@@ -54,6 +57,7 @@ function watchFiles(entryPath: string) {
     {
       persistent: true,
       ignoreInitial: true,
+      ignored: [/node_modules/],
     }
   );
 
@@ -62,19 +66,19 @@ function watchFiles(entryPath: string) {
     const watchExts = [".js", ".mjs", ".cjs", ".ts", ".env"];
 
     if (watchExts.includes(ext) || filePath.includes(".env")) {
-      console.log(`📝 File changed: ${filePath}`);
+      logger.info(`📝 File changed: ${filePath}`);
       restartServer(entryPath);
     }
   });
 
-  console.log("🔍 Watching for file changes...");
+  logger.info("🔍 Watching for file changes...");
 }
 
 /**
  * Cleanup on exit
  */
 process.on("SIGINT", () => {
-  console.log("\n🛑 Stopping dev server...");
+  logger.info("\n🛑 Stopping dev server...");
   if (serverProcess) serverProcess.kill("SIGTERM");
   process.exit();
 });

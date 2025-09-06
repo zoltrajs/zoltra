@@ -14,6 +14,11 @@ const cli = createCLI(
   "The official CLI for Zoltra - A fast, file-based JavaScript web server framework"
 );
 
+// Default action
+cli.action(() => {
+  cli.showHelp();
+});
+
 cli
   .command("start", "Start the Zoltra application")
   .action(() => start())

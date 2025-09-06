@@ -28,11 +28,26 @@ export interface IApplication {
   logger: ILogger;
 
   use(middleware: RequestHandler, options?: object): this;
-  route(method: string, path: string, handler: (ctx: IContext) => any): this;
-  get(path: string, handler: (ctx: IContext) => any): this;
-  post(path: string, handler: (ctx: IContext) => any): this;
-  put(path: string, handler: (ctx: IContext) => any): this;
-  delete(path: string, handler: (ctx: IContext) => any): this;
+  get(
+    path: string,
+    handler: (ctx: IContext) => any,
+    middleware?: RequestHandler[]
+  ): this;
+  post(
+    path: string,
+    handler: (ctx: IContext) => any,
+    middleware?: RequestHandler[]
+  ): this;
+  put(
+    path: string,
+    handler: (ctx: IContext) => any,
+    middleware?: RequestHandler[]
+  ): this;
+  delete(
+    path: string,
+    handler: (ctx: IContext) => any,
+    middleware?: RequestHandler[]
+  ): this;
 
   service(name: string, service: any, scope?: "singleton" | "transient"): this;
   plugin(plugin: any): this;
@@ -45,7 +60,7 @@ export interface IApplication {
   close(): Promise<void>;
   shutdown(): Promise<void>;
 
-  handleRequest(req: any, res: any): Promise<void>;
+  handler(req: any, res: any): Promise<void>;
 
   health(): object;
   getRecentErrors(limit?: number): any[];
@@ -81,6 +96,14 @@ export interface IContainer {
   createChild(): IContainer;
 }
 
+export namespace Registry {
+  export type ServiceName = "env" | "logger";
+  export interface __services {
+    name: ServiceName;
+    // function_type
+  }
+}
+
 export interface IContext {
   req: IncomingMessage;
   res: ServerResponse;
@@ -108,7 +131,7 @@ export interface IContext {
   redirect(url: string, status?: number): this;
   body<T = any>(): Promise<T>;
   rawBody: string;
-  service<T = any>(name: string): T;
+  service<T = any>(name: Registry.__services["name"]): T;
   sent: boolean;
   statusCode: number;
 }

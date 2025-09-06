@@ -7,19 +7,25 @@ import {
   IContext,
   MatchResult,
   IRouter,
+  MiddlewareObject,
 } from "../../types";
+import { Logger } from "../utils/logger";
 
 export class Router implements IRouter {
   private routesDir: string;
   private staticRoutes: Map<string, StaticRoute>;
   private fileRoutes: Map<string, Handler>;
   private middlewares: Map<string, RequestHandler[]>;
+  private logger: Logger;
+  private routes: string[];
 
   constructor(routesDir: string = "./routes") {
     this.routesDir = routesDir;
     this.staticRoutes = new Map();
     this.fileRoutes = new Map();
     this.middlewares = new Map();
+    this.logger = new Logger({ context: "Router" });
+    this.routes = [];
   }
 
   /**
@@ -84,6 +90,19 @@ export class Router implements IRouter {
 
       const routeModule: any = await import(fileUrl);
 
+      if (typeof routeModule.middleware === "object") {
+        // load middleware
+        if (Array.isArray(routeModule.middleware)) {
+          for (const middleware of routeModule.middleware) {
+            this.addMiddleware(routePath, middleware);
+          }
+        } else {
+          this.logger.error(
+            `Invalid middleware export: Expected 'array' but received '${typeof routeModule.middleware}'`
+          );
+        }
+      }
+
       if (typeof routeModule.default === "function") {
         this.fileRoutes.set(routePath, routeModule.default);
       } else if (typeof routeModule === "function") {
@@ -92,6 +111,7 @@ export class Router implements IRouter {
         routeModule.GET ||
         routeModule.POST ||
         routeModule.PUT ||
+        routeModule.PATCH ||
         routeModule.DELETE
       ) {
         Object.entries(routeModule).forEach(([method, handler]) => {
@@ -100,12 +120,78 @@ export class Router implements IRouter {
             this.fileRoutes.set(methodPath, handler as Handler);
           }
         });
+      } else {
+        this._logModuleError();
       }
-
-      console.log(`📁 Loaded route: ${routePath} from ${relativePath}`);
     } catch (error) {
       console.error(`Error loading route ${relativePath}:`, error);
     }
+  }
+
+  async handle(context: IContext): Promise<void> {
+    const matched = await this.match(context);
+    if (!matched) {
+      this.logger.error(`Route not found: ${context.method} ${context.path}`);
+      context.status(404).json({
+        error: "Not Found",
+        message: `Route ${context.method} ${context.path} not found`,
+      });
+      return;
+    }
+
+    if (matched.params) {
+      context.params = { ...context.params, ...matched.params };
+    }
+
+    await this._runMiddleware(matched.middleware, context);
+
+    if (context.sent) return;
+
+    await matched.handler(context);
+  }
+
+  /**
+   * @private
+   */
+  private async _logModuleError() {
+    this.logger.error(
+      "Route module configuration error - Missing handler export",
+      {
+        problem: "Route file does not export a handler",
+        solution:
+          "Ensure your route file exports a default handler or method using:",
+        codeExample: {
+          "[default: handler]":
+            "export default async function handler(context){...}",
+          "[GET|POST|PATCH|POST|PUT]":
+            "export const [METHOD] = async (context) => {...}",
+        },
+      }
+    );
+  }
+
+  /**
+   * @private
+   */
+  private async _runMiddleware(
+    middlewares: (RequestHandler | MiddlewareObject)[],
+    context: IContext
+  ) {
+    // Create middleware chain
+    const middlewareChain = middlewares.reduceRight<() => Promise<void>>(
+      (next, middleware) => async () => {
+        // Check if middleware is an object or function
+        if (typeof middleware === "function") {
+          await middleware(context, next);
+        } else if (typeof middleware === "object") {
+          // Execute object handle
+          await middleware.handle(context, next);
+        }
+      },
+      async () => {}
+    );
+
+    await middlewareChain();
   }
 
   /**
@@ -149,11 +235,37 @@ export class Router implements IRouter {
   /**
    * Add middleware for a specific route pattern
    */
-  addMiddleware(pattern: string, middleware: RequestHandler): void {
-    if (!this.middlewares.has(pattern)) {
-      this.middlewares.set(pattern, []);
+  addMiddleware(
+    pattern: string,
+    middleware: RequestHandler | MiddlewareObject
+  ): void {
+    if (typeof middleware === "function") {
+      const prev = this.middlewares.get(pattern);
+
+      const updatedMiddleware = prev ? [...prev, middleware] : [middleware];
+
+      this.middlewares.set(pattern, updatedMiddleware);
+    } else if (
+      typeof middleware === "object" &&
+      typeof middleware.handle === "function"
+    ) {
+      const prev = this.middlewares.get(pattern);
+
+      // Bind handle to middleware body
+      const updatedMiddleware = prev
+        ? [...prev, middleware.handle.bind(middleware)]
+        : [middleware.handle.bind(middleware)];
+
+      this.middlewares.set(pattern, updatedMiddleware);
     }
-    this.middlewares.get(pattern)!.push(middleware);
+  }
+
+  private _getMiddleware(pattern: string) {
+    if (this.middlewares.has(pattern)) {
+      return this.middlewares.get(pattern) || [];
+    }
+
+    return [];
   }
 
   /**
@@ -188,7 +300,7 @@ export class Router implements IRouter {
     if (fileMatch) {
       return {
         handler: fileMatch.handler,
-        middleware: [],
+        middleware: fileMatch.middlewares,
         params: fileMatch.params,
         type: "file",
       };
@@ -234,26 +346,47 @@ export class Router implements IRouter {
   private _matchFileRoute(
     context: IContext,
     path: string
-  ): { handler: Handler; params: Record<string, string> } | null {
+  ): {
+    handler: Handler;
+    params: Record<string, string>;
+    middlewares: RequestHandler[];
+  } | null {
     const method = context.method.toUpperCase();
 
     const directKey = `${method} ${path}`;
     if (this.fileRoutes.has(directKey)) {
-      return { handler: this.fileRoutes.get(directKey)!, params: {} };
+      return {
+        handler: this.fileRoutes.get(directKey)!,
+        params: {},
+        middlewares: this._getMiddleware(path),
+      };
     }
 
     if (method === "GET" && this.fileRoutes.has(path)) {
-      return { handler: this.fileRoutes.get(path)!, params: {} };
+      return {
+        handler: this.fileRoutes.get(path)!,
+        params: {},
+        middlewares: this._getMiddleware(path),
+      };
     }
 
     if (method === "GET" && path === "/" && this.fileRoutes.has("/index")) {
-      return { handler: this.fileRoutes.get("/index")!, params: {} };
+      return {
+        handler: this.fileRoutes.get("/index")!,
+        params: {},
+        middlewares: this._getMiddleware("/index"),
+      };
     }
 
     for (const [routePath, handler] of this.fileRoutes) {
       if (routePath.includes(":")) {
         const params = this._extractParams(routePath, path);
-        if (params) return { handler, params };
+        if (params)
+          return {
+            handler,
+            params,
+            middlewares: this._getMiddleware(routePath),
+          };
       }
     }
 
@@ -262,7 +395,12 @@ export class Router implements IRouter {
         const [routeMethod, routePath] = routeKey.split(" ");
         if (routeMethod === method && routePath.includes(":")) {
           const params = this._extractParams(routePath, path);
-          if (params) return { handler, params };
+          if (params)
+            return {
+              handler,
+              params,
+              middlewares: this._getMiddleware(routeKey) || [],
+            };
         }
       }
     }

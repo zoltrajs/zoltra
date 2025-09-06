@@ -216,6 +216,7 @@ app.get("/users/:id", (context) => {
 - `app.delete(path, handler)` — Add DELETE route
 - `app.service(name, service)` — Register DI service
 - `app.plugin(plugin)` — Register plugin
+- `app.handler(req, res)` - Core request handler
 - `app.listen(port, host)` — Start server
 
 <a name="context"></a>

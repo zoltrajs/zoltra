@@ -1,3 +1,4 @@
+import { IncomingMessage } from "http";
 import { IContext } from "./core";
 
 export interface IEnvironmentManager {
@@ -27,6 +28,7 @@ export interface LoggerOptions {
     | string
     | ((level: LogLevel, message: string, meta?: any) => void)
   )[];
+  context?: string;
 }
 
 export interface ILogger {
@@ -35,7 +37,7 @@ export interface ILogger {
   info(message: string, meta?: Record<string, any>): void;
   debug(message: string, meta?: Record<string, any>): void;
 
-  request(context: any, responseTime?: number): void;
+  trackRequest(context: IContext): void;
 
   setLevel(level: LogLevel): void;
   addOutput(
