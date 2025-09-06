@@ -7,3 +7,5 @@ interface MiddlewareObj {
 export function defineMiddlewares(middlewares: MiddlewareObj[]) {
   return middlewares.map((m) => m.handler);
 }
+
+export * from "./res-body";

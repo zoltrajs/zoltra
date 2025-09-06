@@ -78,7 +78,7 @@ function watchFiles(entryPath: string) {
  * Cleanup on exit
  */
 process.on("SIGINT", () => {
-  logger.info("\n🛑 Stopping dev server...");
+  logger.info("🛑 Stopping dev server...");
   if (serverProcess) serverProcess.kill("SIGTERM");
   process.exit();
 });

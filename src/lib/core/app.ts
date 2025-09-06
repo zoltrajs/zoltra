@@ -42,7 +42,7 @@ export class Application implements IApplication {
 
   constructor(options: ApplicationOptions = {}) {
     this.options = {
-      port: 3000,
+      port: 5000,
       host: "localhost",
       routesDir: "./routes",
       publicDir: "./public",

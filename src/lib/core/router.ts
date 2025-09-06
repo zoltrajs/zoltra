@@ -2,7 +2,7 @@ import { join } from "path";
 import { pathToRegexp } from "path-to-regexp";
 import { RequestHandler, Handler, IContext, IRouter, Route } from "../../types";
 import { Logger } from "../utils/logger";
-import { promises as fs } from "fs";
+import { existsSync, promises as fs } from "fs";
 import path, { resolve } from "path";
 
 export class Router implements IRouter {
@@ -18,7 +18,13 @@ export class Router implements IRouter {
 
   async loadRoutes(): Promise<void> {
     try {
-      await this._loadFileRoutes(join(process.cwd(), "routes"));
+      let routeDir = join(process.cwd(), "routes");
+
+      if (existsSync(join(process.cwd(), "dist"))) {
+        routeDir = join(process.cwd(), "dist", "routes");
+      }
+
+      await this._loadFileRoutes(routeDir);
     } catch {
       // swallow startup errors if no routes dir
     }
@@ -53,7 +59,7 @@ export class Router implements IRouter {
       return route.middlewareChain!(ctx);
     }
 
-    ctx.status(404).json({ error: "Not Found" });
+    ctx.status(404).json({ error: "Route Not Found" });
   }
 
   addRoute(
@@ -129,6 +135,10 @@ export class Router implements IRouter {
       routePath = routePath.slice(0, -6);
     }
 
+    if (routePath === "index") {
+      routePath = "/";
+    }
+
     routePath = routePath.replace(/\[([^\]]+)\]/g, ":$1");
 
     if (!routePath.startsWith("/")) {
@@ -169,9 +179,11 @@ export class Router implements IRouter {
         // Optional export = middlewares
         const middlewares = module.middlewares || [];
 
+        // Register GET by default
         if (typeof handler === "function") {
-          // Register GET by default
           this.addRoute("GET", routePath, handler, middlewares);
+        } else if (handler.default && typeof handler.default === "function") {
+          this.addRoute("GET", routePath, handler.default, middlewares);
         } else if (
           module.GET ||
           module.POST ||

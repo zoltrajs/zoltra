@@ -96,14 +96,6 @@ export interface IContainer {
   createChild(): IContainer;
 }
 
-export namespace Registry {
-  export type ServiceName = "env" | "logger";
-  export interface __services {
-    name: ServiceName;
-    // function_type
-  }
-}
-
 export interface IContext {
   req: IncomingMessage;
   res: ServerResponse;
@@ -124,13 +116,13 @@ export interface IContext {
   get(key: string): string | undefined;
   set(key: string, value: string): this;
   send(body: any): this;
-  json(data: object): this;
-  html(html: string): this;
-  text(text: string): this;
+  json(data: object): void;
+  html(html: string): void;
+  text(text: string): void;
   redirect(url: string, status?: number): this;
   body<T = any>(): Promise<T>;
   rawBody: string;
-  service<T = any>(name: Registry.__services["name"]): T;
+  service<T = any>(name: string): T;
   sent: boolean;
   statusCode: number;
 }

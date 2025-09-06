@@ -2,6 +2,25 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.1.0-next.4] - 2025-09-06
+
+### Added
+
+- **Build directory support**: Router now automatically detects and uses `dist/routes` when a `dist` directory exists for built applications
+- **Enhanced route loading**: Added `handler.default` fallback support for better ES module compatibility
+
+### Enhanced
+
+- **Route path mapping**: Improved handling of index files - `index.js`/`index.ts` now correctly maps to root path `/`
+- **Error messaging**: Updated router 404 error message from generic "Not Found" to more specific "Route Not Found"
+
+### Changed
+
+- **Breaking**: Default application port changed from `3000` to `5000`
+- **Breaking**: Context response method signatures updated - [`json()`](src/types/core.ts:119), [`html()`](src/types/core.ts:120), [`text()`](src/types/core.ts:121) methods no longer return `this` in interface
+- **Type system simplification**: Removed `Registry` namespace complexity, [`Context.service()`](src/types/core.ts:125) now accepts plain `string` parameter
+- Version bumped to 0.1.0-next.4
+
 ## [0.1.0-next.3] - 2025-09-06
 
 ### Enhanced
