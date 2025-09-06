@@ -14,7 +14,7 @@ export class Context implements IContext {
   query: ParsedUrlQuery;
 
   private _statusCode: number;
-  private _headers: Record<string, string>;
+  private _headers: Map<string, string> = new Map();
   private _body: any;
   private _sent: boolean;
 
@@ -37,7 +37,6 @@ export class Context implements IContext {
     this.query = parseQuery(parsedUrl.query || "");
 
     this._statusCode = 200;
-    this._headers = {};
     this._body = null;
     this._sent = false;
 
@@ -57,19 +56,13 @@ export class Context implements IContext {
     return this;
   }
 
-  set(name: string, value: string): this {
-    this._headers[name.toLowerCase()] = value;
-    return this;
+  get(key: string): string | undefined {
+    return this._headers.get(key.toLowerCase());
   }
 
-  get(name: string): string | undefined {
-    return this._headers[name.toLowerCase()];
-  }
-
-  setHeaders(headers: Record<string, string>): this {
-    Object.entries(headers).forEach(([name, value]) => {
-      this.set(name, value);
-    });
+  set(key: string, value: string) {
+    this._headers.set(key.toLowerCase(), value);
+    this.res.setHeader(key, value);
     return this;
   }
 
@@ -85,6 +78,11 @@ export class Context implements IContext {
   json(data: object): this {
     this.set("Content-Type", "application/json");
     return this.send(JSON.stringify(data));
+  }
+
+  jsonString(data: string) {
+    this.set("content-type", "application/json");
+    this.send(data);
   }
 
   html(html: string): this {
@@ -104,43 +102,69 @@ export class Context implements IContext {
     return this;
   }
 
-  async body<T = any>(): Promise<T> {
-    if (this._bodyParsed) {
-      return this._parsedBody as T;
+  // async body<T = any>(): Promise<T> {
+  //   if (this._bodyParsed) {
+  //     return this._parsedBody as T;
+  //   }
+
+  //   return new Promise<T>((resolve, reject) => {
+  //     let body = "";
+
+  //     this.req.on("data", (chunk) => {
+  //       body += chunk.toString();
+  //     });
+
+  //     this.req.on("end", () => {
+  //       this._rawBody = body;
+  //       this._bodyParsed = true;
+
+  //       try {
+  //         const contentType = this.headers["content-type"] || "";
+
+  //         if (contentType.includes("application/json")) {
+  //           this._parsedBody = JSON.parse(body || "{}");
+  //         } else if (
+  //           contentType.includes("application/x-www-form-urlencoded")
+  //         ) {
+  //           this._parsedBody = parseQuery(body);
+  //         } else {
+  //           this._parsedBody = body;
+  //         }
+
+  //         resolve(this._parsedBody as T);
+  //       } catch (error) {
+  //         reject(error);
+  //       }
+  //     });
+
+  //     this.req.on("error", reject);
+  //   });
+  // }
+
+  async body(): Promise<any> {
+    if (this._body !== null) return this._body;
+
+    const chunks: Buffer[] = [];
+    for await (const chunk of this.req) {
+      chunks.push(chunk as Buffer);
+    }
+    const raw = Buffer.concat(chunks);
+
+    const type = this.req.headers["content-type"] || "";
+
+    if (type.includes("application/json")) {
+      try {
+        this._body = JSON.parse(raw.toString("utf8"));
+      } catch {
+        this._body = null;
+      }
+    } else if (type.includes("application/x-www-form-urlencoded")) {
+      this._body = new URLSearchParams(raw.toString("utf8"));
+    } else {
+      this._body = raw; // leave as Buffer
     }
 
-    return new Promise<T>((resolve, reject) => {
-      let body = "";
-
-      this.req.on("data", (chunk) => {
-        body += chunk.toString();
-      });
-
-      this.req.on("end", () => {
-        this._rawBody = body;
-        this._bodyParsed = true;
-
-        try {
-          const contentType = this.headers["content-type"] || "";
-
-          if (contentType.includes("application/json")) {
-            this._parsedBody = JSON.parse(body || "{}");
-          } else if (
-            contentType.includes("application/x-www-form-urlencoded")
-          ) {
-            this._parsedBody = parseQuery(body);
-          } else {
-            this._parsedBody = body;
-          }
-
-          resolve(this._parsedBody as T);
-        } catch (error) {
-          reject(error);
-        }
-      });
-
-      this.req.on("error", reject);
-    });
+    return this._body;
   }
 
   get rawBody(): string {
@@ -158,7 +182,11 @@ export class Context implements IContext {
       this.set("Content-Type", "text/plain");
     }
 
-    this.res.writeHead(this._statusCode, this._headers);
+    this.res.writeHead(this._statusCode, ...this._headers);
+
+    // for (const [k, v] of this._headers) {
+    //   this.res.setHeader(k, v);
+    // }
 
     if (this._body !== null) {
       this.res.end(this._body);

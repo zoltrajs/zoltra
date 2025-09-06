@@ -1,18 +1,9 @@
 import { join } from "path";
-import { pathToRegexp, Key } from "path-to-regexp";
-import { RequestHandler, Handler, IContext, IRouter } from "../../types";
+import { pathToRegexp } from "path-to-regexp";
+import { RequestHandler, Handler, IContext, IRouter, Route } from "../../types";
 import { Logger } from "../utils/logger";
-import { loadFileRoutes } from "../utils/router";
-
-interface Route {
-  method: string;
-  path: string;
-  regex?: RegExp;
-  keys?: Key[];
-  handler: Handler;
-  middlewares: RequestHandler[];
-  middlewareChain?: (ctx: IContext) => Promise<void>;
-}
+import { promises as fs } from "fs";
+import path, { resolve } from "path";
 
 export class Router implements IRouter {
   private routes: Map<string, Route> = new Map();
@@ -27,7 +18,7 @@ export class Router implements IRouter {
 
   async loadRoutes(): Promise<void> {
     try {
-      await loadFileRoutes(this, join(process.cwd(), "routes"));
+      await this._loadFileRoutes(join(process.cwd(), "routes"));
     } catch {
       // swallow startup errors if no routes dir
     }
@@ -124,5 +115,94 @@ export class Router implements IRouter {
       };
       await next();
     };
+  }
+
+  /**
+   * Convert file path to route path
+   * @private
+   */
+  _filePathToRoutePath(filePath: string): string {
+    let routePath = filePath.replace(/\\/g, "/");
+    routePath = routePath.replace(/\.(js|mjs|cjs|ts)$/, "");
+
+    if (routePath.endsWith("/index")) {
+      routePath = routePath.slice(0, -6);
+    }
+
+    routePath = routePath.replace(/\[([^\]]+)\]/g, ":$1");
+
+    if (!routePath.startsWith("/")) {
+      routePath = "/" + routePath;
+    }
+
+    if (routePath === "") {
+      routePath = "/";
+    }
+
+    return routePath;
+  }
+
+  async _loadFileRoutes(routesDir: string, currentPath: string = "") {
+    const files = await fs.readdir(routesDir, { withFileTypes: true });
+
+    for (const file of files) {
+      const fullPath = path.join(routesDir, file.name);
+      const relativePath = path.join(currentPath, file.name);
+
+      if (file.isDirectory()) {
+        await this._loadFileRoutes(fullPath, relativePath); // recurse into subdirs
+      } else if (
+        file.isFile() &&
+        (file.name.endsWith(".ts") || file.name.endsWith(".js"))
+      ) {
+        // ✅ Build route path from file path
+        const routePath = this._filePathToRoutePath(relativePath);
+
+        // ✅ Dynamic import only once (at startup)
+        const absolutePath = resolve(fullPath);
+        const fileUrl = new URL(`file:///${absolutePath.replace(/\\/g, "/")}`)
+          .href;
+        const module = await import(fileUrl);
+
+        // Default export = handler
+        const handler = module.default;
+        // Optional export = middlewares
+        const middlewares = module.middlewares || [];
+
+        if (typeof handler === "function") {
+          // ✅ Register GET by default, or expose more if needed
+          this.addRoute("GET", routePath, handler, middlewares);
+        } else if (
+          module.GET ||
+          module.POST ||
+          module.PUT ||
+          module.PATCH ||
+          module.DELETE
+        ) {
+          Object.entries(module).forEach(([method, handler]) => {
+            if (typeof handler === "function") {
+              this.addRoute(method, routePath, handler as any, middlewares);
+            }
+          });
+        } else this._logModuleError();
+      }
+    }
+  }
+
+  private async _logModuleError() {
+    this.logger.error(
+      "Route module configuration error - Missing handler export",
+      {
+        problem: "Route file does not export a handler",
+        solution:
+          "Ensure your route file exports a default handler or method using:",
+        codeExample: {
+          "[default: handler]":
+            "export default async function handler(context){...}",
+          "[GET|POST|PATCH|POST|PUT]":
+            "export const [METHOD] = async (context) => {...}",
+        },
+      }
+    );
   }
 }

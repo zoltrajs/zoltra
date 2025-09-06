@@ -121,9 +121,8 @@ export interface IContext {
 
   headers: IncomingMessage["headers"];
   status(code: number): this;
-  set(name: string, value: string): this;
-  get(name: string): string | undefined;
-  setHeaders(headers: Record<string, string>): this;
+  get(key: string): string | undefined;
+  set(key: string, value: string): this;
   send(body: any): this;
   json(data: object): this;
   html(html: string): this;

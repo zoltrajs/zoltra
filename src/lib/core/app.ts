@@ -53,7 +53,7 @@ export class Application implements IApplication {
     };
 
     // Core components
-    this.router = new Router(this.options.routesDir);
+    this.router = new Router();
     this.middleware = new MiddlewareStack();
     this.plugins = new PluginManager();
     this.container = new Container();

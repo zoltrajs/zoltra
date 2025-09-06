@@ -2,6 +2,25 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.1.0-next.3] - 2025-09-06
+
+### Enhanced
+
+- **Request body parsing**: Modernized [`Context.body()`](src/lib/core/Context.ts:144) method using async iterators instead of event-based approach for better performance and reliability
+- **Buffer handling**: Improved content type detection and processing for JSON, form-urlencoded, and raw binary data
+- **Response headers**: Fixed header writing mechanism in [`Context._send()`](src/lib/core/Context.ts:185) using `writeHead` with spread operator for better compatibility
+
+### Changed
+
+- **Breaking**: Body parsing implementation changed from Promise-based event handling to async iterator pattern using `for await (const chunk of this.req)`
+- File naming standardized to PascalCase: `context.ts` → `Context.ts`
+- Version bumped to 0.1.0-next.3
+
+### Fixed
+
+- Response header corruption issues in high-concurrency scenarios
+- Better error handling for malformed request bodies
+
 ## [0.1.0-next.2] - 2025-09-06
 
 ### Added
