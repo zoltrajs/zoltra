@@ -1,7 +1,6 @@
 import { extname } from "path";
-import { Context } from "../core/context";
 import { FileServer } from "../utils/file-server";
-import { StaticMiddlewareOptions } from "../../types";
+import { IContext, NextFunction, StaticMiddlewareOptions } from "../../types";
 
 /**
  * Static file serving middleware
@@ -13,7 +12,7 @@ export class Static {
     this.fileServer = new FileServer(root, options);
   }
 
-  async handle(context: Context, next: () => Promise<void>): Promise<void> {
+  async handle(context: IContext, next: NextFunction): Promise<void> {
     // Only handle GET and HEAD requests
     if (!["GET", "HEAD"].includes(context.method)) {
       await next();

@@ -1,6 +1,6 @@
 {
   "name": "zoltra",
-  "version": "0.1.0-next.5.2",
+  "version": "0.1.0-next.5.3",
   "description": "A fast, file-based JavaScript web server framework",
   "type": "module",
   "main": "./dist/index.js",
