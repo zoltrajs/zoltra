@@ -1,19 +1,7 @@
 import { Key } from "path-to-regexp";
-import { IContext, RequestHandler } from "./core";
+import { IContext, Middleware } from "./core";
 
 export type Handler = (ctx: IContext) => Promise<any> | any;
-
-export interface StaticRoute {
-  handler: Handler;
-  middleware: RequestHandler[];
-}
-
-export interface MatchResult {
-  handler: Handler;
-  middleware: RequestHandler[];
-  params: Record<string, string>;
-  type: "static" | "file";
-}
 
 export interface Route {
   method: string;
@@ -21,7 +9,7 @@ export interface Route {
   regex?: RegExp;
   keys?: Key[];
   handler: Handler;
-  middlewares: RequestHandler[];
+  middlewares: Middleware[];
   middlewareChain?: (ctx: IContext) => Promise<void>;
 }
 
@@ -35,7 +23,7 @@ export interface IRouter {
     method: string,
     path: string,
     handler: Handler,
-    middleware?: RequestHandler[]
+    middleware?: Middleware[]
   ): void;
 
   handle(context: IContext): Promise<void>;

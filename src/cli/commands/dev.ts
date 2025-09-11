@@ -9,7 +9,7 @@ let restartTimer: NodeJS.Timeout | null = null;
 const logger = new Logger({ context: "Dev-Server" });
 
 /**
- * Start or restart the Express server
+ * Start or restart the server
  */
 function startServer(entryPath: string) {
   if (serverProcess) {

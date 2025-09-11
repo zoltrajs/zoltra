@@ -1,6 +1,6 @@
 import { join } from "path";
 import { pathToRegexp } from "path-to-regexp";
-import { RequestHandler, Handler, IContext, IRouter, Route } from "../../types";
+import { Middleware, Handler, IContext, IRouter, Route } from "../../types";
 import { Logger } from "../utils/logger";
 import { existsSync, promises as fs } from "fs";
 import path, { resolve } from "path";
@@ -8,11 +8,11 @@ import path, { resolve } from "path";
 export class Router implements IRouter {
   private routes: Map<string, Route> = new Map();
   private paramRoutes: Route[] = [];
-  private globalMiddlewares: RequestHandler[] = [];
+  private globalMiddlewares: Middleware[] = [];
 
   constructor(private logger = new Logger({ context: "Router" })) {}
 
-  use(mw: RequestHandler) {
+  use(mw: Middleware) {
     this.globalMiddlewares.push(mw);
   }
 
@@ -66,7 +66,7 @@ export class Router implements IRouter {
     method: string,
     path: string,
     handler: Handler,
-    middlewares: RequestHandler[] = []
+    middlewares: Middleware[] = []
   ) {
     const route: Route = { method, path, handler, middlewares };
 
@@ -86,7 +86,7 @@ export class Router implements IRouter {
   }
 
   private buildMiddlewareChain(
-    stack: (RequestHandler | Handler | any)[]
+    stack: (Middleware | Handler | any)[]
   ): (ctx: IContext) => Promise<void> {
     return async (ctx: IContext) => {
       let i = 0;
@@ -96,7 +96,7 @@ export class Router implements IRouter {
 
         // Check if middleware is a function or object/class with handle method
         if (typeof middleware === "function") {
-          const result = (middleware as RequestHandler)(ctx, next);
+          const result = (middleware as Middleware)(ctx, next);
           if (result instanceof Promise) {
             await result;
           }
@@ -182,6 +182,7 @@ export class Router implements IRouter {
         // Register GET by default
         if (typeof handler === "function") {
           this.addRoute("GET", routePath, handler, middlewares);
+          // commonjs pattern export.default = handler
         } else if (handler.default && typeof handler.default === "function") {
           this.addRoute("GET", routePath, handler.default, middlewares);
         } else if (
@@ -212,7 +213,7 @@ export class Router implements IRouter {
           "[default: handler]":
             "export default async function handler(context){...}",
           "[GET|POST|PATCH|POST|PUT]":
-            "export const [METHOD] = async (context) => {...}",
+            "export async function [METHOD](context){...}",
         },
       }
     );

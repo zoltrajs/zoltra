@@ -1,17 +1,17 @@
-import { IContext, RequestHandler } from "./core";
+import { IContext, Middleware } from "./core";
 
 /**
  * Middleware object type (class-based)
  */
 export interface MiddlewareObject {
-  handle: RequestHandler;
+  handle: Middleware;
 }
 
 /**
  * Middleware entry with options
  */
 export interface MiddlewareEntry {
-  handler: RequestHandler;
+  handler: Middleware;
   options?: Record<string, any>;
 }
 
@@ -20,11 +20,11 @@ export interface MiddlewareEntry {
  */
 export interface IMiddlewareStack {
   add(
-    middleware: RequestHandler | MiddlewareObject,
+    middleware: Middleware | MiddlewareObject,
     options?: Record<string, any>
   ): void;
   execute(ctx: IContext): Promise<void>;
-  remove(middleware: RequestHandler): void;
+  remove(middleware: Middleware): void;
   clear(): void;
   readonly length: number;
 }

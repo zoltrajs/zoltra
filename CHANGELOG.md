@@ -2,6 +2,41 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.1.0-next.5] - 2025-09-11
+
+### Added
+
+- **WebSocket Support**: Complete WebSocket server implementation with event-driven architecture, connection management, and broadcasting capabilities ([src/lib/core/websocket-server.ts](src/lib/core/websocket-server.ts), [src/lib/core/websocket-context.ts](src/lib/core/websocket-context.ts))
+- **HTTP/2 Support**: HTTP/2 server implementation with SSL/TLS support using spdy library for improved performance ([src/lib/core/http2-server.ts](src/lib/core/http2-server.ts))
+- **Compression Middleware**: Response compression middleware using compression library with configurable options ([src/lib/middleware/compression.ts](src/lib/middleware/compression.ts))
+- **Plugin Creation Utilities**: `createPlugin()` and `simplePlugin()` helper functions for easier plugin development ([src/lib/plugins/create-plugin.ts](src/lib/plugins/create-plugin.ts))
+- **Base Plugin Class**: `BasePlugin` abstract class providing lifecycle hooks and plugin foundation ([src/lib/plugins/base-plugin.ts](src/lib/plugins/base-plugin.ts))
+- **Request Context Management**: `RequestContext` class for managing request-scoped dependency injection services ([src/lib/di/request-context.ts](src/lib/di/request-context.ts))
+- **Error Handling System**: `ZoltraError` base class for structured error handling with status codes and error codes ([src/lib/errors/base.ts](src/lib/errors/base.ts))
+- **Health Monitoring**: Built-in health check endpoint and server metrics ([src/lib/core/app.ts:481](src/lib/core/app.ts:481))
+- **WebSocket API Methods**: `app.ws()` for registering WebSocket event handlers and `app.broadcast()` for broadcasting messages to connected clients
+- **Enhanced Server Management**: Server info tracking, error logging, and graceful shutdown capabilities
+
+### Enhanced
+
+- **Application Class**: Major enhancements including WebSocket integration, HTTP/2 support, compression middleware, and improved error handling ([src/lib/core/app.ts](src/lib/core/app.ts))
+- **Middleware System**: Improved middleware stack with better error propagation and lifecycle management ([src/lib/middleware/stack.ts](src/lib/middleware/stack.ts))
+- **Plugin Architecture**: Enhanced plugin system with comprehensive lifecycle hooks and better management ([src/lib/plugins/manger.ts](src/lib/plugins/manger.ts))
+- **Dependency Injection**: Added support for request-scoped services alongside singleton and transient scopes ([src/lib/di/container.ts](src/lib/di/container.ts))
+
+### Changed
+
+- **Breaking**: Application constructor now accepts `websocket`, `http2`, and `compression` options in configuration
+- **Breaking**: Removed `json-parser` middleware - body parsing now handled directly in context with improved async iterator pattern
+- **Breaking**: Removed AWS adapter - functionality moved to separate package or deprecated
+- Version bumped to 0.1.0-next.5
+
+### Fixed
+
+- Improved error handling in WebSocket connections and message processing
+- Better resource cleanup for request-scoped services
+- Enhanced logging for server startup and shutdown processes
+
 ## [0.1.0-next.4] - 2025-09-06
 
 ### Added

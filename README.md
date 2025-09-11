@@ -1,4 +1,4 @@
-# Zoltra[next]
+# Zoltra
 
 A fast, file-based JavaScript web server framework built for Node.js 18+ with enterprise-grade features.
 
@@ -105,7 +105,7 @@ Create routes in the `routes/` directory:
 
 ```javascript
 // routes/index.js
-export default async function handler(context) {
+export default function handler(context) {
   return context.json({ message: 'Hello World!' });
 }
 
@@ -113,6 +113,14 @@ export default async function handler(context) {
 export default async function handler(context) {
   const userId = context.params.id;
   return context.json({ userId, name: `User ${userId}` });
+}
+
+// routes/auth/login.js
+export async function POST(context){
+  const { email, password } = await context.body();
+  // Or `context.validatedBody` when validateBody([...]) middleware is used
+  const { email, password } = context.validatedBody;
+  //...
 }
 ```
 
@@ -171,7 +179,7 @@ app.use(cors()); // Note: Zoltra also provides CORS middleware
 Middleware parameters:
 
 - Express: `(req, res, next)` — Node request/response objects and next callback
-- Zoltra: `(context, next)` — `context` is a Zoltra `Context` object; `next` is a `NextFn` (or `() => Promise<void>`) to continue the chain
+- Zoltra: `(context, next)` — `context` is a Zoltra `Context` object; `next` is a `NextFunction` (or `() => Promise<void>`) to continue the chain
 
 Example (using Express middleware in Zoltra):
 
@@ -216,6 +224,8 @@ app.get("/users/:id", (context) => {
 - `app.delete(path, handler)` — Add DELETE route
 - `app.service(name, service)` — Register DI service
 - `app.plugin(plugin)` — Register plugin
+- `app.ws(event, handler)` - Register a WebSocket event handler
+- `app.broadcast(data, filter)` - Broadcast a message to all WebSocket clients
 - `app.handler(req, res)` - Core request handler
 - `app.listen(port, host)` — Start server
 
@@ -231,3 +241,4 @@ app.get("/users/:id", (context) => {
 - `context.body()` — Parse request body
 - `context.service(name)` — Get DI service
 - `context.params` — Route parameters
+- `context.throw(status, message, details)` - Throw new `ZoltraError`

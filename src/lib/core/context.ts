@@ -2,6 +2,8 @@ import { IncomingMessage, ServerResponse } from "http";
 import { parse as parseQuery, ParsedUrlQuery } from "querystring";
 import { parse as parseUrl, UrlWithStringQuery } from "url";
 import { IApplication, IContainer, IContext } from "../../types";
+import { ZoltraError } from "../errors";
+import * as HttpErrors from "../errors/http";
 
 export class Context implements IContext {
   req: IncomingMessage;
@@ -12,14 +14,14 @@ export class Context implements IContext {
   url: string;
   path: string;
   query: ParsedUrlQuery;
+  _startTime: [number, number];
 
   private _statusCode: number;
   private _headers: Map<string, string> = new Map();
-  private _body: any;
+  public _body: any;
   private _sent: boolean;
 
   private _bodyParsed: boolean;
-  public _parsedBody?: any;
   private _rawBody: string;
 
   params: Record<string, string>;
@@ -42,6 +44,7 @@ export class Context implements IContext {
 
     this._bodyParsed = false;
     this._rawBody = "";
+    this._startTime = process.hrtime();
 
     this.params = {};
     this.services = app.container;
@@ -66,18 +69,17 @@ export class Context implements IContext {
     return this;
   }
 
-  send(body: any): this {
+  send(body: any): void {
     if (this._sent) {
       throw new Error("Response already sent");
     }
     this._body = body;
     this._send();
-    return this;
   }
 
-  json(data: object): this {
+  json(data: object): void {
     this.set("Content-Type", "application/json");
-    return this.send(JSON.stringify(data));
+    this.send(JSON.stringify(data));
   }
 
   jsonString(data: string) {
@@ -85,14 +87,14 @@ export class Context implements IContext {
     this.send(data);
   }
 
-  html(html: string): this {
+  html(html: string): void {
     this.set("Content-Type", "text/html");
-    return this.send(html);
+    this.send(html);
   }
 
-  text(text: string): this {
+  text(text: string): void {
     this.set("Content-Type", "text/plain");
-    return this.send(text);
+    this.send(text);
   }
 
   redirect(url: string, status: number = 302): this {
@@ -102,44 +104,47 @@ export class Context implements IContext {
     return this;
   }
 
-  // async body<T = any>(): Promise<T> {
-  //   if (this._bodyParsed) {
-  //     return this._parsedBody as T;
-  //   }
+  throw(status: number, message?: string, details?: any): never {
+    let error: ZoltraError;
 
-  //   return new Promise<T>((resolve, reject) => {
-  //     let body = "";
+    // Create the appropriate error based on status code
+    switch (status) {
+      case 400:
+        error = new HttpErrors.BadRequestError(message, details);
+        break;
+      case 401:
+        error = new HttpErrors.UnauthorizedError(message, details);
+        break;
+      case 403:
+        error = new HttpErrors.ForbiddenError(message, details);
+        break;
+      case 404:
+        error = new HttpErrors.NotFoundError(message, details);
+        break;
+      case 409:
+        error = new HttpErrors.ConflictError(message, details);
+        break;
+      case 422:
+        error = new HttpErrors.ValidationError(message, details);
+        break;
+      case 429:
+        error = new HttpErrors.TooManyRequestsError(message, details);
+        break;
+      case 500:
+        error = new HttpErrors.InternalServerError(message, details);
+        break;
+      case 501:
+        error = new HttpErrors.NotImplementedError(message, details);
+        break;
+      case 503:
+        error = new HttpErrors.ServiceUnavailableError(message, details);
+        break;
+      default:
+        error = new ZoltraError(message || "Error", { status, details });
+    }
 
-  //     this.req.on("data", (chunk) => {
-  //       body += chunk.toString();
-  //     });
-
-  //     this.req.on("end", () => {
-  //       this._rawBody = body;
-  //       this._bodyParsed = true;
-
-  //       try {
-  //         const contentType = this.headers["content-type"] || "";
-
-  //         if (contentType.includes("application/json")) {
-  //           this._parsedBody = JSON.parse(body || "{}");
-  //         } else if (
-  //           contentType.includes("application/x-www-form-urlencoded")
-  //         ) {
-  //           this._parsedBody = parseQuery(body);
-  //         } else {
-  //           this._parsedBody = body;
-  //         }
-
-  //         resolve(this._parsedBody as T);
-  //       } catch (error) {
-  //         reject(error);
-  //       }
-  //     });
-
-  //     this.req.on("error", reject);
-  //   });
-  // }
+    throw error;
+  }
 
   async body(): Promise<any> {
     if (this._body !== null) return this._body;
@@ -172,6 +177,19 @@ export class Context implements IContext {
   }
 
   service<T = any>(name: string): T {
+    // Check if the service is registered in the container
+    if (this.services.has(name)) {
+      const registration = (this.services as any).services.get(name);
+
+      // If it's a request-scoped service, use the RequestContext
+      if (registration && registration.scope === "request") {
+        // Lazy import to avoid circular dependency
+        const { RequestContext } = require("../di/request-context");
+        return RequestContext.resolve(this, name);
+      }
+    }
+
+    // Otherwise use the regular container
     return this.services.resolve<T>(name);
   }
 
@@ -183,10 +201,6 @@ export class Context implements IContext {
     }
 
     this.res.writeHead(this._statusCode, ...this._headers);
-
-    // for (const [k, v] of this._headers) {
-    //   this.res.setHeader(k, v);
-    // }
 
     if (this._body !== null) {
       this.res.end(this._body);

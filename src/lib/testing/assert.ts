@@ -5,7 +5,7 @@ export class Assert {
   /**
    * Assert that a value is truthy
    */
-  static ok(value: unknown, message = "Expected value to be truthy"): void {
+  static ok(value: any, message = "Expected value to be truthy"): void {
     if (!value) {
       throw new Error(message);
     }
@@ -43,7 +43,7 @@ export class Assert {
   /**
    * Assert that a function throws an error
    */
-  static throws(fn: () => unknown, expectedMessage = ""): void {
+  static throws(fn: () => any, expectedMessage = ""): void {
     try {
       fn();
       throw new Error("Expected function to throw an error");

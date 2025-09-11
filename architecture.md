@@ -2,7 +2,7 @@
 
 ## Overview
 
-Zoltra is a fast, file-based web server framework built for Node.js 18+. It combines the simplicity of file-based routing with powerful features like middleware, plugins, dependency injection, and serverless support.
+Zoltra is a fast, file-based web server framework built for Node.js 18+. It combines the simplicity of file-based routing with powerful features like middleware, plugins, dependency injection.
 
 ## Core Architecture
 
@@ -64,12 +64,12 @@ The main entry point that orchestrates all components:
 - Caching headers
 - Directory listing (optional)
 
-### Serverless Support
+<!-- ### Serverless Support
 
 - Platform adapters for AWS Lambda, Vercel, Netlify
 - Request/response transformation
 - Environment detection
-- Cold start optimization
+- Cold start optimization -->
 
 ### Environment Management
 
@@ -89,9 +89,9 @@ The main entry point that orchestrates all components:
 
 ```
 zoltra/
-├── lib/                    # Core framework code
+├── src/                    # Core framework code
 │   ├── core/
-│   │   ├── application.ts
+│   │   ├── app.ts
 │   │   ├── router.ts
 │   │   └── server.ts
 │   ├── middleware/
@@ -117,7 +117,7 @@ zoltra/
 - **Node.js 18+**: Uses modern JavaScript features (ES modules, top-level await)
 - **File-based routing**: Inspired by SvelteKit for developer experience
 - **Plugin system**: Extensible architecture for custom functionality
-- **Serverless-first**: Designed to work in serverless environments
+<!-- - **Serverless-first**: Designed to work in serverless environments -->
 - **Performance-focused**: Minimal overhead, fast routing, efficient middleware
 
 ## Component Interactions

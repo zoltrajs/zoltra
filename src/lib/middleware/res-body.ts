@@ -1,6 +1,6 @@
-import { RequestHandler } from "../../types";
+import { Middleware } from "../../types";
 
-export function validateBody(required: string[]): RequestHandler {
+export function validateBody(required: string[]): Middleware {
   return async (ctx, next) => {
     const body = await ctx.body();
     const missing: string[] = [];
@@ -23,4 +23,19 @@ export function validateBody(required: string[]): RequestHandler {
 
     await next();
   };
+}
+
+export function validateBodyDecorator(
+  target: any,
+  propertyKey: string,
+  descriptor: PropertyDescriptor
+) {
+  const originalMethod = descriptor.value;
+
+  descriptor.value = function (...args: any) {
+    console.log(`Method ${propertyKey} called with arguments: ${args}`);
+    return originalMethod.apply(this, args);
+  };
+
+  return descriptor;
 }

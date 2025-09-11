@@ -1,6 +1,6 @@
 import { IncomingMessage, ServerResponse } from "http";
 import { ParsedUrlQuery } from "querystring";
-import { ILogger } from "./utils";
+import { IEnvironmentManager, ILogger } from "./utils";
 
 export interface ApplicationOptions {
   port?: number;
@@ -10,6 +10,103 @@ export interface ApplicationOptions {
   logLevel?: "error" | "warn" | "info" | "debug";
   autoIncrementPort?: boolean;
   maxPortAttempts?: number;
+
+  /**
+   * HTTP/2 options
+   */
+  http2?: {
+    /**
+     * Enable HTTP/2 support
+     */
+    enabled?: boolean;
+
+    /**
+     * Path to SSL certificate
+     */
+    cert?: string | Buffer;
+
+    /**
+     * Path to SSL key
+     */
+    key?: string | Buffer;
+
+    /**
+     * Maximum concurrent streams per connection
+     */
+    maxConcurrentStreams?: number;
+
+    /**
+     * Plain HTTP/2 without TLS (not recommended for production)
+     */
+    plain?: boolean;
+  };
+
+  /**
+   * Compression options
+   */
+  compression?: {
+    /**
+     * Enable response compression
+     */
+    enabled?: boolean;
+
+    /**
+     * Compression level (0-9, where 0 is no compression and 9 is maximum compression)
+     */
+    level?: number;
+
+    /**
+     * Minimum response size in bytes to compress
+     */
+    threshold?: number;
+  };
+
+  /**
+   * WebSocket options
+   */
+  websocket?: {
+    /**
+     * Enable WebSocket support
+     */
+    enabled?: boolean;
+
+    /**
+     * WebSocket server path
+     * @default '/ws'
+     */
+    path?: string;
+
+    /**
+     * Maximum allowed message size in bytes
+     */
+    maxPayload?: number;
+
+    /**
+     * Enable/disable per-message deflate
+     */
+    perMessageDeflate?: boolean | object;
+
+    /**
+     * Ping interval in milliseconds
+     * @default 30000
+     */
+    pingInterval?: number;
+
+    /**
+     * Ping timeout in milliseconds
+     * @default 5000
+     */
+    pingTimeout?: number;
+  };
+
+  /**
+   * Custom error handler
+   */
+  errorHandler?: (
+    error: Error,
+    context: IContext,
+    options: { app: IApplication }
+  ) => void;
 }
 
 export interface ServerInfo {
@@ -26,27 +123,43 @@ export interface IApplication {
   serverInfo: ServerInfo;
   container: IContainer;
   logger: ILogger;
+  readonly env: IEnvironmentManager;
 
-  use(middleware: RequestHandler, options?: object): this;
+  use(middleware: Middleware, options?: object): this;
   get(
     path: string,
     handler: (ctx: IContext) => any,
-    middleware?: RequestHandler[]
+    ...middleware: Middleware[]
   ): this;
   post(
     path: string,
     handler: (ctx: IContext) => any,
-    middleware?: RequestHandler[]
+    ...middleware: Middleware[]
   ): this;
+
+  /**
+   * Register a WebSocket event handler
+   */
+  ws(event: string, handler: Function): this;
+
+  /**
+   * Broadcast a message to all WebSocket clients
+   */
+  broadcast(data: any, filter?: (client: any) => boolean): void;
   put(
     path: string,
     handler: (ctx: IContext) => any,
-    middleware?: RequestHandler[]
+    ...middleware: Middleware[]
+  ): this;
+  patch(
+    path: string,
+    handler: (ctx: IContext) => any,
+    ...middleware: Middleware[]
   ): this;
   delete(
     path: string,
     handler: (ctx: IContext) => any,
-    middleware?: RequestHandler[]
+    ...middleware: Middleware[]
   ): this;
 
   service(name: string, service: any, scope?: "singleton" | "transient"): this;
@@ -68,7 +181,7 @@ export interface IApplication {
 }
 
 // Container
-export type ServiceScope = "singleton" | "transient";
+export type ServiceScope = "singleton" | "transient" | "request";
 
 export interface ServiceRegistration<T = any> {
   service: T | (new (...args: any[]) => T) | (() => T);
@@ -89,6 +202,8 @@ export interface IContainer {
 
   unregister(name: string): void;
 
+  createChild(): IContainer;
+
   getServiceNames(): string[];
 
   clear(): void;
@@ -106,7 +221,11 @@ export interface IContext {
   path: string;
   query: ParsedUrlQuery;
 
-  _parsedBody?: any;
+  _body?: any;
+  _startTime: [number, number];
+  rawBody: string;
+  sent: boolean;
+  statusCode: number;
 
   params: Record<string, string>;
   services: IContainer;
@@ -115,25 +234,23 @@ export interface IContext {
   status(code: number): this;
   get(key: string): string | undefined;
   set(key: string, value: string): this;
-  send(body: any): this;
+  send(body: any): void;
   json(data: object): void;
   html(html: string): void;
   text(text: string): void;
   redirect(url: string, status?: number): this;
   body<T = any>(): Promise<T>;
-  rawBody: string;
   service<T = any>(name: string): T;
-  sent: boolean;
-  statusCode: number;
+  throw(status: number, message?: string, details?: any): never;
 }
 
 /**
  * Middleware function type
  */
 
-export type RequestHandler = (
+export type Middleware = (
   context: IContext,
-  next: () => Promise<void>
+  next: NextFunction
 ) => Promise<void> | void;
 
-export type NextFn = () => Promise<void>;
+export type NextFunction = () => Promise<void>;

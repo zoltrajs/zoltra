@@ -1,4 +1,4 @@
-import { IContext, RequestHandler } from "../../types";
+import { IContext, Middleware } from "../../types";
 import {
   IMiddlewareStack,
   MiddlewareEntry,
@@ -14,8 +14,9 @@ export class MiddlewareStack implements IMiddlewareStack {
   /**
    * Add middleware to the stack
    */
+
   add(
-    middleware: RequestHandler | MiddlewareObject,
+    middleware: Middleware | MiddlewareObject,
     options: Record<string, any> = {}
   ): void {
     if (typeof middleware === "function") {
@@ -59,7 +60,7 @@ export class MiddlewareStack implements IMiddlewareStack {
   /**
    * Remove middleware from the stack
    */
-  remove(middleware: RequestHandler): void {
+  remove(middleware: Middleware): void {
     this.middlewares = this.middlewares.filter((m) => m.handler !== middleware);
   }
 

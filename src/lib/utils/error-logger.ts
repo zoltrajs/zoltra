@@ -1,4 +1,4 @@
-import { IContext, NextFn } from "../../types";
+import { IContext } from "../../types";
 import { IErrorLogger, ILogger } from "../../types/utils";
 import { Logger } from "./logger";
 

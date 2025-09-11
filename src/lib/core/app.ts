@@ -9,7 +9,7 @@ import { Handler } from "../../types/router";
 import {
   ApplicationOptions,
   IApplication,
-  RequestHandler,
+  Middleware,
   ServerInfo,
 } from "../../types/core";
 import { PluginManager } from "../plugins/manger";
@@ -19,15 +19,20 @@ import { ErrorLogger } from "../utils/error-logger";
 import { RequestLogger } from "../utils/request-logger";
 import { CORSOptions, Plugin } from "../../types/plugin";
 import { cors } from "../middleware/cors";
+import { compress } from "../middleware/compression";
+import { createHTTP2Server } from "./http2-server";
+import { WebSocketManager } from "./websocket-server";
+import { WebSocketHandler } from "../../types/websocket";
 
 export class Application implements IApplication {
   public readonly options: ApplicationOptions;
-  public readonly router: Router;
+  private readonly router: Router;
   public readonly middleware: IMiddlewareStack;
   public readonly plugins: PluginManager;
   public readonly container: Container;
   public readonly env: EnvironmentManager;
   public logger: ILogger;
+  public readonly websocket: WebSocketManager;
 
   private server: Server | null;
   private isListening: boolean;
@@ -67,6 +72,9 @@ export class Application implements IApplication {
       context: "App",
     });
 
+    // Initialize WebSocket manager
+    this.websocket = new WebSocketManager(this, this.options.websocket);
+
     // Server state
     this.server = null;
     this.isListening = false;
@@ -92,6 +100,17 @@ export class Application implements IApplication {
 
       this._addBuiltInMiddleware();
 
+      // Add compression middleware if enabled
+      if (this.options.compression?.enabled) {
+        this.use(
+          compress({
+            level: this.options.compression.level,
+            threshold: this.options.compression.threshold,
+          })
+        );
+        this.logger.info("Response compression enabled");
+      }
+
       await this.plugins.initialize(this);
 
       await this.router.loadRoutes();
@@ -116,7 +135,7 @@ export class Application implements IApplication {
     return this;
   }
 
-  use(middleware: RequestHandler, options = {}): this {
+  use(middleware: Middleware, options = {}): this {
     this.middleware.add(middleware, options);
     return this;
   }
@@ -125,26 +144,30 @@ export class Application implements IApplication {
     method: string,
     path: string,
     handler: Handler,
-    middleware?: RequestHandler[]
+    ...middleware: Middleware[]
   ): this {
     this.router.addRoute(method, path, handler, middleware);
     return this;
   }
 
-  get(path: string, handler: Handler, middleware?: RequestHandler[]): this {
-    return this._route("GET", path, handler, middleware);
+  get(path: string, handler: Handler, ...middleware: Middleware[]): this {
+    return this._route("GET", path, handler, ...middleware);
   }
 
-  post(path: string, handler: Handler, middleware?: RequestHandler[]): this {
-    return this._route("POST", path, handler, middleware);
+  post(path: string, handler: Handler, ...middleware: Middleware[]): this {
+    return this._route("POST", path, handler, ...middleware);
   }
 
-  put(path: string, handler: Handler, middleware?: RequestHandler[]): this {
-    return this._route("PUT", path, handler, middleware);
+  put(path: string, handler: Handler, ...middleware: Middleware[]): this {
+    return this._route("PUT", path, handler, ...middleware);
   }
 
-  delete(path: string, handler: Handler, middleware?: RequestHandler[]): this {
-    return this._route("DELETE", path, handler, middleware);
+  patch(path: string, handler: Handler, ...middleware: Middleware[]): this {
+    return this._route("PATCH", path, handler, ...middleware);
+  }
+
+  delete(path: string, handler: Handler, ...middleware: Middleware[]): this {
+    return this._route("DELETE", path, handler, ...middleware);
   }
 
   service(
@@ -161,13 +184,50 @@ export class Application implements IApplication {
     return this;
   }
 
+  /**
+   * Register a WebSocket event handler
+   * @param event Event name
+   * @param handler Handler function
+   */
+  ws(event: string, handler: WebSocketHandler): this {
+    this.websocket.on(event, handler);
+    return this;
+  }
+
+  /**
+   * Broadcast a message to all WebSocket clients
+   * @param data Message data
+   * @param filter Optional filter function
+   */
+  broadcast(data: any, filter?: (client: any) => boolean): void {
+    this.websocket.broadcast(data, filter);
+  }
+
   async handler(req: any, res: any): Promise<void> {
     const context = new Context(req, res, this);
 
     try {
+      // Execute before request hook
+      await this.plugins.executeHook("beforeRequest", {
+        app: this,
+        requestContext: context,
+      });
+
       await this.middleware.execute(context);
 
+      // Execute before route hook
+      await this.plugins.executeHook("beforeRoute", {
+        app: this,
+        requestContext: context,
+      });
+
       await this.router.handle(context);
+
+      // Execute after route hook
+      await this.plugins.executeHook("afterRoute", {
+        app: this,
+        requestContext: context,
+      });
     } catch (err: any) {
       this.errors.push({
         timestamp: new Date(),
@@ -177,23 +237,52 @@ export class Application implements IApplication {
         stack: err.stack,
       });
 
-      this.logger.error(`Request failed: ${context.method} ${context.path}`, {
-        method: context.method,
-        path: context.path,
-        error: err.message,
-        stack: err.stack,
-        ip: req.socket.remoteAddress,
-        userAgent: req.headers["user-agent"],
+      // Execute error hook
+      await this.plugins.executeHook("onError", {
+        app: this,
+        requestContext: context,
+        error: err,
       });
 
       if (!context.sent) {
-        const isDev = this.env.get("NODE_ENV") === "development";
-        context.status(500).json({
-          error: "Internal Server Error",
-          message: isDev ? err.message : "Something went wrong",
-          ...(isDev && { stack: err.stack }),
-        });
+        // Use the ZoltraError handling if it's a ZoltraError
+        if (
+          err.name &&
+          err.name.includes("Error") &&
+          typeof err.toJSON === "function"
+        ) {
+          return context.status(err.status || 500).json(err.toJSON());
+        } // Call custom error handler if provided
+        else if (this.options.errorHandler) {
+          this.options.errorHandler(err, context, { app: this });
+        } else {
+          // Default error handling
+          const isDev = this.env.get("NODE_ENV") === "development";
+
+          this.logger.error(
+            `Request failed: ${context.method} ${context.path}`,
+            {
+              method: context.method,
+              path: context.path,
+              error: err.message,
+              stack: err.stack,
+              ip: req.socket.remoteAddress,
+              userAgent: req.headers["user-agent"],
+            }
+          );
+
+          return context.status(500).json({
+            error: "Internal Server Error",
+            code: err.code || "INTERNAL_ERROR",
+            message: isDev ? err.message : "Something went wrong",
+            ...(isDev && { stack: err.stack }),
+          });
+        }
       }
+    } finally {
+      // Clean up request-scoped services
+      const { RequestContext } = require("../di/request-context");
+      RequestContext.clear(context);
     }
   }
 
@@ -206,7 +295,31 @@ export class Application implements IApplication {
       throw new Error("Server is already running");
     }
 
-    this.server = createServer(this.handler.bind(this));
+    // Execute before start hook
+    await this.plugins.executeHook("beforeStart", { app: this });
+
+    // Create HTTP/2 server if enabled, otherwise create HTTP/1 server
+    if (this.options.http2?.enabled) {
+      try {
+        this.server = createHTTP2Server(this, {
+          cert: this.options.http2.cert,
+          key: this.options.http2.key,
+          maxConcurrentStreams: this.options.http2.maxConcurrentStreams,
+          plain: this.options.http2.plain,
+        });
+        this.logger.info("HTTP/2 server created");
+      } catch (err: any) {
+        this.logger.error(
+          "Failed to create HTTP/2 server, falling back to HTTP/1",
+          {
+            error: err.message,
+          }
+        );
+        this.server = createServer(this.handler.bind(this));
+      }
+    } else {
+      this.server = createServer(this.handler.bind(this));
+    }
 
     const maxAttempts = this.options.autoIncrementPort
       ? this.options.maxPortAttempts!
@@ -221,6 +334,24 @@ export class Application implements IApplication {
         this.isListening = true;
 
         this.logger.info(`🚀 Server running on http://${host}:${currentPort}`);
+
+        // Initialize WebSocket server if enabled
+        if (this.options.websocket?.enabled) {
+          this.websocket.initialize(this.server);
+          this.logger.info(
+            `WebSocket server enabled on path: ${
+              this.options.websocket.path || "/ws"
+            }`
+          );
+        }
+
+        // Execute after start hook
+        await this.plugins.executeHook("afterStart", {
+          app: this,
+          server: this.server,
+          port: currentPort,
+          host,
+        });
 
         if (callback) callback(currentPort);
 
@@ -286,8 +417,14 @@ export class Application implements IApplication {
   async shutdown(): Promise<void> {
     this.logger.info("Shutting down server...");
     if (this.server && this.isListening) {
+      // Execute before shutdown hook
+      await this.plugins.executeHook("beforeShutdown", {
+        app: this,
+        server: this.server,
+      });
+
       return new Promise((resolve) => {
-        this.server!.close((err?: any) => {
+        this.server!.close(async (err?: any) => {
           this.isListening = false;
           this.actualPort = null;
 
@@ -298,6 +435,12 @@ export class Application implements IApplication {
           } else {
             this.logger.info("Server shutdown complete");
           }
+
+          // Shutdown all plugins
+          await this.plugins.shutdown();
+
+          // Execute after shutdown hook
+          await this.plugins.executeHook("afterShutdown", { app: this });
 
           resolve();
         });

@@ -1,4 +1,4 @@
-import { IContext, NextFn } from "../../types";
+import { IContext, NextFunction } from "../../types";
 import { CORSOptions } from "../../types/plugin";
 
 /**
@@ -14,14 +14,14 @@ import { CORSOptions } from "../../types/plugin";
 export const cors = (options: CORSOptions = {}) => {
   const {
     origin = "*",
-    methods = ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    methods = ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
     allowedHeaders,
     exposedHeaders,
     credentials = false,
     maxAge,
   } = options;
 
-  return async function corsMiddleware(ctx: IContext, next: NextFn) {
+  return async function corsMiddleware(ctx: IContext, next: NextFunction) {
     let resolvedOrigin = "*";
 
     if (typeof origin === "string") {
