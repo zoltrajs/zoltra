@@ -57,7 +57,7 @@ npx zoltra@next create -n <project-name>
 Replace `<project-name>` with your desired project name. For example:
 
 ```bash
-npx zoltra create -n auth-app
+npx zoltra@next create -n auth-app
 ```
 
 This commands will create a new project with the name `auth-app` in the current directory with basic template.
