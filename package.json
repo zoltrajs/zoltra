@@ -28,7 +28,7 @@
   ],
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/zoltrajs/zoltra.git/tree/next"
+    "url": "git+https://github.com/zoltrajs/zoltra/tree/next"
   },
   "homepage": "https://github.com/zoltrajs/zoltra#readme",
   "bugs": {
