@@ -1,6 +1,13 @@
 import { join } from "path";
 import { pathToRegexp } from "path-to-regexp";
-import { Middleware, Handler, IContext, IRouter, Route } from "../../types";
+import {
+  Middleware,
+  Handler,
+  IContext,
+  IRouter,
+  Route,
+  MiddlewareObject,
+} from "../../types";
 import { Logger } from "../utils/logger";
 import { existsSync, promises as fs } from "fs";
 import path, { resolve } from "path";
@@ -66,7 +73,7 @@ export class Router implements IRouter {
     method: string,
     path: string,
     handler: Handler,
-    middlewares: Middleware[] = []
+    middlewares: (Middleware | MiddlewareObject)[] = []
   ) {
     const route: Route = { method, path, handler, middlewares };
 
@@ -86,7 +93,7 @@ export class Router implements IRouter {
   }
 
   private buildMiddlewareChain(
-    stack: (Middleware | Handler | any)[]
+    stack: (Middleware | MiddlewareObject)[]
   ): (ctx: IContext) => Promise<void> {
     return async (ctx: IContext) => {
       let i = 0;

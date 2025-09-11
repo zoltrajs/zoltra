@@ -4,7 +4,10 @@ import { Context } from "./context";
 import { Container } from "../di/container";
 import { EnvironmentManager } from "../utils/env";
 import { Logger } from "../utils/logger";
-import type { IMiddlewareStack } from "../../types/middleware";
+import type {
+  IMiddlewareStack,
+  MiddlewareObject,
+} from "../../types/middleware";
 import { Handler } from "../../types/router";
 import {
   ApplicationOptions,
@@ -135,7 +138,7 @@ export class Application implements IApplication {
     return this;
   }
 
-  use(middleware: Middleware, options = {}): this {
+  use(middleware: Middleware | MiddlewareObject, options = {}): this {
     this.middleware.add(middleware, options);
     return this;
   }
@@ -144,29 +147,49 @@ export class Application implements IApplication {
     method: string,
     path: string,
     handler: Handler,
-    ...middleware: Middleware[]
+    ...middleware: (Middleware | MiddlewareObject)[]
   ): this {
     this.router.addRoute(method, path, handler, middleware);
     return this;
   }
 
-  get(path: string, handler: Handler, ...middleware: Middleware[]): this {
+  get(
+    path: string,
+    handler: Handler,
+    ...middleware: (Middleware | MiddlewareObject)[]
+  ): this {
     return this._route("GET", path, handler, ...middleware);
   }
 
-  post(path: string, handler: Handler, ...middleware: Middleware[]): this {
+  post(
+    path: string,
+    handler: Handler,
+    ...middleware: (Middleware | MiddlewareObject)[]
+  ): this {
     return this._route("POST", path, handler, ...middleware);
   }
 
-  put(path: string, handler: Handler, ...middleware: Middleware[]): this {
+  put(
+    path: string,
+    handler: Handler,
+    ...middleware: (Middleware | MiddlewareObject)[]
+  ): this {
     return this._route("PUT", path, handler, ...middleware);
   }
 
-  patch(path: string, handler: Handler, ...middleware: Middleware[]): this {
+  patch(
+    path: string,
+    handler: Handler,
+    ...middleware: (Middleware | MiddlewareObject)[]
+  ): this {
     return this._route("PATCH", path, handler, ...middleware);
   }
 
-  delete(path: string, handler: Handler, ...middleware: Middleware[]): this {
+  delete(
+    path: string,
+    handler: Handler,
+    ...middleware: (Middleware | MiddlewareObject)[]
+  ): this {
     return this._route("DELETE", path, handler, ...middleware);
   }
 

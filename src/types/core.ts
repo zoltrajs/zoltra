@@ -1,6 +1,7 @@
 import { IncomingMessage, ServerResponse } from "http";
 import { ParsedUrlQuery } from "querystring";
 import { IEnvironmentManager, ILogger } from "./utils";
+import { MiddlewareObject } from "./middleware";
 
 export interface ApplicationOptions {
   port?: number;
@@ -125,16 +126,16 @@ export interface IApplication {
   logger: ILogger;
   readonly env: IEnvironmentManager;
 
-  use(middleware: Middleware, options?: object): this;
+  use(middleware: Middleware | MiddlewareObject, options?: object): this;
   get(
     path: string,
     handler: (ctx: IContext) => any,
-    ...middleware: Middleware[]
+    ...middleware: (Middleware | MiddlewareObject)[]
   ): this;
   post(
     path: string,
     handler: (ctx: IContext) => any,
-    ...middleware: Middleware[]
+    ...middleware: (Middleware | MiddlewareObject)[]
   ): this;
 
   /**
@@ -149,17 +150,17 @@ export interface IApplication {
   put(
     path: string,
     handler: (ctx: IContext) => any,
-    ...middleware: Middleware[]
+    ...middleware: (Middleware | MiddlewareObject)[]
   ): this;
   patch(
     path: string,
     handler: (ctx: IContext) => any,
-    ...middleware: Middleware[]
+    ...middleware: (Middleware | MiddlewareObject)[]
   ): this;
   delete(
     path: string,
     handler: (ctx: IContext) => any,
-    ...middleware: Middleware[]
+    ...middleware: (Middleware | MiddlewareObject)[]
   ): this;
 
   service(name: string, service: any, scope?: "singleton" | "transient"): this;

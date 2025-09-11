@@ -1,5 +1,6 @@
 import { Key } from "path-to-regexp";
 import { IContext, Middleware } from "./core";
+import { MiddlewareObject } from "./middleware";
 
 export type Handler = (ctx: IContext) => Promise<any> | any;
 
@@ -9,7 +10,7 @@ export interface Route {
   regex?: RegExp;
   keys?: Key[];
   handler: Handler;
-  middlewares: Middleware[];
+  middlewares: (Middleware | MiddlewareObject)[];
   middlewareChain?: (ctx: IContext) => Promise<void>;
 }
 
