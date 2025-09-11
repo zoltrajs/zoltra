@@ -78,17 +78,17 @@ function watchFiles(entryPath: string) {
   logger.info("🔍 Watching for file changes...");
 }
 
-/**
- * Cleanup on exit
- */
-process.on("SIGINT", () => {
-  logger.info("🛑 Stopping dev server...");
-  if (serverProcess) serverProcess.kill("SIGTERM");
-  process.exit();
-});
-
 // Start dev server
 export const startTsDevServer = (path: string) => {
   startServer(path);
   watchFiles(path);
+
+  /**
+   * Cleanup on exit
+   */
+  process.on("SIGINT", () => {
+    logger.info("🛑 Stopping dev server...");
+    if (serverProcess) serverProcess.kill("SIGTERM");
+    process.exit();
+  });
 };

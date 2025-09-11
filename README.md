@@ -48,24 +48,49 @@ A fast, file-based JavaScript web server framework built for Node.js 18+ with en
 
 <a name="installation"></a>
 
-### Installation
+### Create a new project
 
 ```bash
-npm install zoltra@next
+npx zoltra@next create -n <project-name>
 ```
+
+Replace `<project-name>` with your desired project name. For example:
+
+```bash
+npx zoltra create -n auth-app
+```
+
+This commands will create a new project with the name `auth-app` in the current directory with basic template.
+To specify a different template, use the `--template` or `-t` option:
+
+```bash
+npx zoltra@next create -n auth-app --template <template-name>
+```
+
+To list available templates, use the `--list-templates` option:
+
+```bash
+npx zoltra@next --list-templates
+```
+
+Use `-s` or `--skip-git` to skip git initialization.
 
 <a name="basic-usage"></a>
 
 ### Basic usage
-
-Create an `app.js` file:
 
 ```javascript
 import { Application } from "zoltra";
 
 const app = new Application();
 
-app.listen(5000);
+app.enableCors();
+
+app.get("/hello", (context) => {
+  return context.text("hello world");
+});
+
+app.listen();
 ```
 
 <a name="development-features"></a>

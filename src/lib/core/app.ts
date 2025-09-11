@@ -322,27 +322,29 @@ export class Application implements IApplication {
     await this.plugins.executeHook("beforeStart", { app: this });
 
     // Create HTTP/2 server if enabled, otherwise create HTTP/1 server
-    if (this.options.http2?.enabled) {
-      try {
-        this.server = createHTTP2Server(this, {
-          cert: this.options.http2.cert,
-          key: this.options.http2.key,
-          maxConcurrentStreams: this.options.http2.maxConcurrentStreams,
-          plain: this.options.http2.plain,
-        });
-        this.logger.info("HTTP/2 server created");
-      } catch (err: any) {
-        this.logger.error(
-          "Failed to create HTTP/2 server, falling back to HTTP/1",
-          {
-            error: err.message,
-          }
-        );
-        this.server = createServer(this.handler.bind(this));
-      }
-    } else {
-      this.server = createServer(this.handler.bind(this));
-    }
+    // if (this.options.http2?.enabled) {
+    // try {
+    //   this.server = createHTTP2Server(this, {
+    //     cert: this.options.http2.cert,
+    //     key: this.options.http2.key,
+    //     maxConcurrentStreams: this.options.http2.maxConcurrentStreams,
+    //     plain: this.options.http2.plain,
+    //   });
+    //   this.logger.info("HTTP/2 server created");
+    // } catch (err: any) {
+    //   this.logger.error(
+    //     "Failed to create HTTP/2 server, falling back to HTTP/1",
+    //     {
+    //       error: err.message,
+    //     }
+    //   );
+    //   this.server = createServer(this.handler.bind(this));
+    // }
+    // } else {
+    //   this.server = createServer(this.handler.bind(this));
+    // }
+
+    this.server = createServer(this.handler.bind(this));
 
     const maxAttempts = this.options.autoIncrementPort
       ? this.options.maxPortAttempts!
