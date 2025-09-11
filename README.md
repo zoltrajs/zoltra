@@ -40,6 +40,7 @@ A fast, file-based JavaScript web server framework built for Node.js 18+ with en
 - 🛡️ **Advanced error handling** — Comprehensive error tracking and reporting
 - 🔄 **Port auto-increment** — Automatic port incrementation when ports are in use
 - 📈 **Health monitoring** — Built-in health checks and server metrics
+- 🔌 **WebSocket support** — Built-in WebSocket server with event handling and broadcasting
 
 <a name="quick-start"></a>
 
