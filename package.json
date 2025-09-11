@@ -1,6 +1,6 @@
 {
   "name": "zoltra",
-  "version": "0.1.0-next.5",
+  "version": "0.1.0-next.5.1",
   "description": "A fast, file-based JavaScript web server framework",
   "type": "module",
   "main": "./dist/index.js",
@@ -30,9 +30,9 @@
     "type": "git",
     "url": "git+https://github.com/zoltrajs/zoltra/tree/next"
   },
-  "homepage": "https://github.com/zoltrajs/zoltra#readme",
+  "homepage": "https://github.com/zoltrajs/zoltra/tree/next#readme",
   "bugs": {
-    "url": "https://github.com/zoltrajs/zoltra/issues"
+    "url": "https://github.com/zoltrajs/zoltra/tree/nextissues"
   },
   "scripts": {
     "build": "tsup",

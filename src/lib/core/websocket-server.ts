@@ -1,4 +1,4 @@
-import { Server as WebSocketServer } from "ws";
+import { WebSocketServer } from "ws";
 import { Server as HttpServer } from "http";
 import { IApplication } from "../../types/core";
 import { ILogger } from "../../types/utils";
