@@ -3,3 +3,4 @@ export * from "./router";
 export * from "./middleware";
 export * from "./plugin";
 export * from "./testing";
+export * from "./utils";

@@ -40,8 +40,12 @@ export class Router implements IRouter {
   async handle(ctx: IContext) {
     const method = ctx.req.method || "GET";
     const url = ctx.req.url || "/";
-    const normalized =
+    let normalized =
       url.length > 1 && url.endsWith("/") ? url.slice(0, -1) : url;
+
+    if (normalized.includes("?")) {
+      normalized = normalized.split("?")[0];
+    }
 
     let route = this.routes.get(method + ":" + normalized);
     let params: Record<string, string> | undefined;
@@ -103,7 +107,7 @@ export class Router implements IRouter {
 
         // Check if middleware is a function or object/class with handle method
         if (typeof middleware === "function") {
-          const result = (middleware as Middleware)(ctx, next);
+          const result = middleware(ctx, next);
           if (result instanceof Promise) {
             await result;
           }

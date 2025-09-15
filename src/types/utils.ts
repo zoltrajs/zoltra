@@ -1,4 +1,3 @@
-import { IncomingMessage } from "http";
 import { IContext } from "./core";
 
 export interface IEnvironmentManager {

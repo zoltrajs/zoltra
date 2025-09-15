@@ -30,3 +30,4 @@ export { TestRunner } from "./testing/runner";
 export * from "./plugins/index";
 export * from "./middleware/index";
 export { Logger } from "./utils/logger";
+export { colorText } from "./utils/color";

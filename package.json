@@ -1,6 +1,6 @@
 {
   "name": "zoltra",
-  "version": "0.1.0-next.6",
+  "version": "0.1.0-next.6.1",
   "description": "A fast, file-based JavaScript web server framework",
   "type": "module",
   "main": "./dist/index.js",
@@ -14,8 +14,7 @@
       "types": "./dist/index.d.ts",
       "import": "./dist/index.js",
       "require": "./dist/index.cjs"
-    },
-    "./package.json": "./package.json"
+    }
   },
   "files": [
     "dist/**/*"
