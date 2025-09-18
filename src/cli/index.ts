@@ -39,7 +39,7 @@ cli
     required: true,
   })
   .option("template", "The template to use for the application", {
-    default: "default",
+    default: "basic",
     type: "string",
     alias: "t",
   })

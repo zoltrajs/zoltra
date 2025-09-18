@@ -4,14 +4,22 @@ import path from "path";
 import { exec } from "child_process";
 import ora from "ora";
 import { getPackageOption } from "../shared";
+import { readdirSync } from "fs";
 
 function downloadExample(template: string, projectName: string) {
   const tag = getPackageOption().publishConfig.tag;
   const tmpDir = path.join(process.cwd(), "__tmp_example__");
   const projectRoot = path.resolve(process.cwd(), projectName);
 
-  if (fs.existsSync(projectRoot)) {
+  console.log("\nroot:",readdirSync(projectRoot))
+  console.log("\nroot-ln:",readdirSync(projectRoot).length)
+
+  if (fs.existsSync(projectRoot) && projectName != "./") {
     throw new Error(`Project "${projectName}" already exists.`);
+  } else if (projectName === "./" && readdirSync(projectRoot).length > 0) {
+    throw new Error(
+      `Cannot create new project in the current root ${projectRoot}.`
+    );
   }
 
   return new Promise((resolve, reject) => {
@@ -89,7 +97,7 @@ async function installDependencies(projectRoot: string) {
 
 export const createApp = async (
   name: string,
-  example = "default",
+  example: string,
   skipGit: boolean
 ) => {
   try {
