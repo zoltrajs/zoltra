@@ -52,7 +52,6 @@ export class FileServer {
       ".woff2": "font/woff2",
     };
   }
-
   /**
    * Serve a file
    */

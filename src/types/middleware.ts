@@ -19,10 +19,7 @@ export interface MiddlewareEntry {
  * Middleware stack interface
  */
 export interface IMiddlewareStack {
-  add(
-    middleware: Middleware | MiddlewareObject,
-    options?: Record<string, any>
-  ): void;
+  add(middleware: Middleware | MiddlewareObject): void;
   execute(ctx: IContext): Promise<void>;
   remove(middleware: Middleware): void;
   clear(): void;

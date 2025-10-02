@@ -138,8 +138,8 @@ export class Application implements IApplication {
     return this;
   }
 
-  use(middleware: Middleware | MiddlewareObject, options = {}): this {
-    this.middleware.add(middleware, options);
+  use(middleware: Middleware | MiddlewareObject): this {
+    this.middleware.add(middleware);
     return this;
   }
 

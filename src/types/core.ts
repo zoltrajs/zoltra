@@ -126,7 +126,7 @@ export interface IApplication {
   logger: ILogger;
   readonly env: IEnvironmentManager;
 
-  use(middleware: Middleware | MiddlewareObject, options?: object): this;
+  use(middleware: Middleware | MiddlewareObject): this;
   get(
     path: string,
     handler: (ctx: IContext) => any,
