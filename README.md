@@ -1,6 +1,6 @@
 # Zoltra
 
-A fast, file-based JavaScript web server framework built for Node.js 18+ with enterprise-grade features.
+A file-based JavaScript web server framework built for Node.js 18+ with enterprise-grade features.
 
 > **Note — experimental `next` branch:** This README describes the `next` branch. The API and features here are experimental and may change without notice. Many features are incomplete and not yet stable. Use for evaluation and testing only; avoid production deployments unless you accept breaking changes.
 
