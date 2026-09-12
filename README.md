@@ -268,3 +268,5 @@ app.get("/users/:id", (context) => {
 - `context.service(name)` — Get DI service
 - `context.params` — Route parameters
 - `context.throw(status, message, details)` - Throw new `ZoltraError`
+
+  
